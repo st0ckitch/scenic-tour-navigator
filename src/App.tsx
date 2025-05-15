@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import TourDetail from "./pages/TourDetail";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
+import Tours from "./pages/Tours";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/tours" element={<Tours />} />
           <Route path="/tour/:id" element={<TourDetail />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

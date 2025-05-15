@@ -2,84 +2,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Plus } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import TourForm from './TourForm';
-
-// Initial demo data
-const initialTours = [
-  {
-    id: "1",
-    name: "The Grand Resort",
-    location: "East Barrett",
-    image: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=800&q=80",
-    category: "Featured",
-    description: "Experience the beauty of Lombok with our exclusive package at The Grand Resort.",
-    rating: 4.8,
-    originalPrice: 499,
-    discountPrice: 288,
-    dates: {
-      start: new Date(2023, 6, 20),
-      end: new Date(2023, 6, 23)
-    },
-    participants: 4
-  },
-  {
-    id: "2",
-    name: "Beach Paradise",
-    location: "Steuberbury",
-    image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=80",
-    category: "Family-friendly",
-    description: "Perfect getaway for families looking for relaxation and fun activities.",
-    rating: 4.7,
-    originalPrice: 355,
-    discountPrice: 287,
-    dates: {
-      start: new Date(2023, 7, 15),
-      end: new Date(2023, 7, 20)
-    },
-    participants: 6
-  },
-];
-
-type Tour = {
-  id: string;
-  name: string;
-  location: string;
-  image: string;
-  category: string;
-  description: string;
-  rating: number;
-  originalPrice: number;
-  discountPrice?: number;
-  dates: {
-    start: Date;
-    end: Date;
-  };
-  participants?: number;
-};
+import { useTours } from '@/contexts/ToursContext';
 
 const AdminTourPanel: React.FC = () => {
-  const [tours, setTours] = useState<Tour[]>(initialTours);
+  const { tours, addTour, updateTour, deleteTour } = useTours();
   const [isAddingTour, setIsAddingTour] = useState(false);
-  const [editingTour, setEditingTour] = useState<Tour | null>(null);
+  const [editingTour, setEditingTour] = useState<typeof tours[0] | null>(null);
   const navigate = useNavigate();
 
-  const handleAddTour = (tour: Omit<Tour, 'id'>) => {
-    const newTour = {
-      ...tour,
-      id: Math.random().toString(36).substring(2, 9),
-      rating: 5.0, // Default rating for new tours
-    };
-    
-    setTours([...tours, newTour as Tour]);
+  const handleAddTour = (tour: Omit<typeof tours[0], 'id'>) => {
+    addTour(tour);
     setIsAddingTour(false);
     toast({
       title: "Tour Added",
@@ -87,8 +23,8 @@ const AdminTourPanel: React.FC = () => {
     });
   };
 
-  const handleUpdateTour = (updatedTour: Tour) => {
-    setTours(tours.map(tour => tour.id === updatedTour.id ? updatedTour : tour));
+  const handleUpdateTour = (updatedTour: typeof tours[0]) => {
+    updateTour(updatedTour);
     setEditingTour(null);
     toast({
       title: "Tour Updated",
@@ -98,7 +34,7 @@ const AdminTourPanel: React.FC = () => {
 
   const handleDeleteTour = (id: string) => {
     const tourToDelete = tours.find(tour => tour.id === id);
-    setTours(tours.filter(tour => tour.id !== id));
+    deleteTour(id);
     toast({
       title: "Tour Deleted",
       description: `${tourToDelete?.name} has been deleted.`,

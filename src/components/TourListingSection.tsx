@@ -1,23 +1,27 @@
 
 import React, { useState } from 'react';
+import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTours } from '@/contexts/ToursContext';
+import { Link } from 'react-router-dom';
 
 type TourCardProps = {
+  id: string;
   name: string;
   location: string;
   image: string;
   rating: number;
   originalPrice: number;
-  discountPrice: number;
+  discountPrice?: number;
   dateRange: string;
 };
 
 const TourCard: React.FC<TourCardProps> = ({ 
-  name, location, image, rating, originalPrice, discountPrice, dateRange 
+  id, name, location, image, rating, originalPrice, discountPrice, dateRange 
 }) => {
   return (
-    <div className="tour-card animate-fade-in">
+    <Link to={`/tour/${id}`} className="tour-card animate-fade-in block">
       <div className="relative overflow-hidden">
         <img 
           src={image}
@@ -33,7 +37,7 @@ const TourCard: React.FC<TourCardProps> = ({
           </div>
           <div className="text-right">
             <div className="text-gray-400 line-through text-sm">${originalPrice}</div>
-            <div className="text-travel-coral font-bold">${discountPrice}</div>
+            <div className="text-travel-coral font-bold">${discountPrice || originalPrice}</div>
           </div>
         </div>
         
@@ -47,7 +51,7 @@ const TourCard: React.FC<TourCardProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
@@ -69,66 +73,21 @@ const FilterButton: React.FC<{ name: string; active: boolean; onClick: () => voi
 };
 
 const TourListingSection: React.FC = () => {
+  const { tours } = useTours();
   const [activeFilter, setActiveFilter] = useState('Featured');
   
-  const filters = ['Featured', 'Family-friendly', 'On sale', 'Sub nav'];
+  // Get unique categories from the tours
+  const availableFilters = Array.from(new Set(tours.map(tour => tour.category)));
+  // Ensure 'Featured' is always included
+  const filters = ['Featured', ...availableFilters.filter(f => f !== 'Featured')];
   
-  const tours = [
-    {
-      name: "The Grand Resort",
-      location: "East Barrett",
-      image: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=800&q=80",
-      rating: 4.8,
-      originalPrice: 499,
-      discountPrice: 288,
-      dateRange: "Tue, Jul 20 - Fri, Jul 23",
-    },
-    {
-      name: "The Grand Resort",
-      location: "Steuberbury",
-      image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=80",
-      rating: 4.8,
-      originalPrice: 355,
-      discountPrice: 287,
-      dateRange: "Tue, Jul 20 - Fri, Jul 23",
-    },
-    {
-      name: "The Grand Resort",
-      location: "Idaview",
-      image: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?auto=format&fit=crop&w=800&q=80",
-      rating: 4.9,
-      originalPrice: 355,
-      discountPrice: 288,
-      dateRange: "Tue, Jul 20 - Fri, Jul 23",
-    },
-    {
-      name: "The Grand Resort",
-      location: "Yasminturt",
-      image: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80",
-      rating: 4.7,
-      originalPrice: 355,
-      discountPrice: 267,
-      dateRange: "Tue, Jul 20 - Fri, Jul 23",
-    },
-    {
-      name: "The Grand Resort",
-      location: "North Edenshire",
-      image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=800&q=80",
-      rating: 4.9,
-      originalPrice: 499,
-      discountPrice: 288,
-      dateRange: "Tue, Jul 20 - Fri, Jul 23",
-    },
-    {
-      name: "The Grand Resort",
-      location: "West Gregoria",
-      image: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?auto=format&fit=crop&w=800&q=80",
-      rating: 4.8,
-      originalPrice: 399,
-      discountPrice: 267,
-      dateRange: "Tue, Jul 20 - Fri, Jul 23",
-    },
-  ];
+  // Filter tours based on active filter
+  const filteredTours = activeFilter 
+    ? tours.filter(tour => tour.category === activeFilter)
+    : tours;
+  
+  // Limit to 6 tours for display
+  const displayedTours = filteredTours.slice(0, 6);
 
   return (
     <section className="py-16 bg-gray-50">
@@ -159,16 +118,28 @@ const TourListingSection: React.FC = () => {
         
         {/* Tour Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {tours.map((tour, index) => (
-            <TourCard key={index} {...tour} />
+          {displayedTours.map((tour) => (
+            <TourCard 
+              key={tour.id} 
+              id={tour.id}
+              name={tour.name} 
+              location={tour.location}
+              image={tour.image}
+              rating={tour.rating}
+              originalPrice={tour.originalPrice}
+              discountPrice={tour.discountPrice}
+              dateRange={`${format(tour.dates.start, "MMM d")} - ${format(tour.dates.end, "MMM d, yyyy")}`}
+            />
           ))}
         </div>
         
         {/* View All Button */}
         <div className="mt-12 text-center">
-          <Button className="bg-travel-coral text-white hover:bg-orange-600 px-8 py-2">
-            View All Tours
-          </Button>
+          <Link to="/tours">
+            <Button className="bg-travel-coral text-white hover:bg-orange-600 px-8 py-2">
+              View All Tours
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
