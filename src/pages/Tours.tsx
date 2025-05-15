@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from '@/components/Navbar';
@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from 'react-router-dom';
 
 const ToursPage: React.FC = () => {
-  const { tours } = useTours();
+  const { tours, loading } = useTours();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   
@@ -63,7 +63,15 @@ const ToursPage: React.FC = () => {
             </div>
           </div>
           
-          {filteredTours.length === 0 ? (
+          {/* Loading state */}
+          {loading && (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-travel-sky" />
+              <span className="ml-2">Loading tours...</span>
+            </div>
+          )}
+          
+          {!loading && filteredTours.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">No tours matching your criteria</p>
               <Button onClick={() => {setSearchTerm(''); setSelectedCategory('All');}}>
@@ -80,6 +88,9 @@ const ToursPage: React.FC = () => {
                         src={tour.image} 
                         alt={tour.name} 
                         className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://via.placeholder.com/400x225?text=No+Image';
+                        }}
                       />
                     </div>
                     <CardContent className="p-4">

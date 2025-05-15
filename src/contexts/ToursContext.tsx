@@ -1,5 +1,7 @@
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 export type Tour = {
   id: string;
@@ -18,158 +20,240 @@ export type Tour = {
   participants?: number;
 };
 
-// Initial demo data
-const initialTours = [
-  {
-    id: "1",
-    name: "The Grand Resort",
-    location: "East Barrett",
-    image: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=800&q=80",
-    category: "Featured",
-    description: "Experience the beauty of Lombok with our exclusive package at The Grand Resort.",
-    rating: 4.8,
-    originalPrice: 499,
-    discountPrice: 288,
-    dates: {
-      start: new Date(2023, 6, 20),
-      end: new Date(2023, 6, 23)
-    },
-    participants: 4
-  },
-  {
-    id: "2",
-    name: "Beach Paradise",
-    location: "Steuberbury",
-    image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=80",
-    category: "Family-friendly",
-    description: "Perfect getaway for families looking for relaxation and fun activities.",
-    rating: 4.7,
-    originalPrice: 355,
-    discountPrice: 287,
-    dates: {
-      start: new Date(2023, 7, 15),
-      end: new Date(2023, 7, 20)
-    },
-    participants: 6
-  },
-  {
-    id: "3",
-    name: "Mountain Retreat",
-    location: "Idaview",
-    image: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?auto=format&fit=crop&w=800&q=80",
-    category: "Featured",
-    description: "Experience breathtaking mountain views and peaceful surroundings.",
-    rating: 4.9,
-    originalPrice: 355,
-    discountPrice: 288,
-    dates: {
-      start: new Date(2023, 8, 10),
-      end: new Date(2023, 8, 15)
-    },
-    participants: 2
-  },
-  {
-    id: "4",
-    name: "Lakeside Cabin",
-    location: "Yasminturt",
-    image: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80",
-    category: "On sale",
-    description: "Relax by the lake in our comfortable cabins with stunning views.",
-    rating: 4.7,
-    originalPrice: 355,
-    discountPrice: 267,
-    dates: {
-      start: new Date(2023, 9, 5),
-      end: new Date(2023, 9, 10)
-    },
-    participants: 4
-  },
-  {
-    id: "5",
-    name: "Coastal Escape",
-    location: "North Edenshire",
-    image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=800&q=80",
-    category: "Featured",
-    description: "Enjoy the coastal breeze and beautiful ocean views.",
-    rating: 4.9,
-    originalPrice: 499,
-    discountPrice: 288,
-    dates: {
-      start: new Date(2023, 10, 15),
-      end: new Date(2023, 10, 20)
-    },
-    participants: 2
-  },
-  {
-    id: "6",
-    name: "Forest Hideaway",
-    location: "West Gregoria",
-    image: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?auto=format&fit=crop&w=800&q=80",
-    category: "Family-friendly",
-    description: "Disconnect and immerse yourself in nature with our forest hideaway.",
-    rating: 4.8,
-    originalPrice: 399,
-    discountPrice: 267,
-    dates: {
-      start: new Date(2023, 11, 10),
-      end: new Date(2023, 11, 15)
-    },
-    participants: 6
-  }
-];
+// Type for the database row
+type TourRow = {
+  id: string;
+  name: string;
+  location: string;
+  image: string;
+  category: string;
+  description: string;
+  rating: number;
+  original_price: number;
+  discount_price?: number;
+  start_date: string;
+  end_date: string;
+  participants?: number;
+};
 
 type ToursContextType = {
   tours: Tour[];
-  addTour: (tour: Omit<Tour, 'id'>) => void;
-  updateTour: (tour: Tour) => void;
-  deleteTour: (id: string) => void;
+  loading: boolean;
+  addTour: (tour: Omit<Tour, 'id'>, imageFile?: File) => Promise<void>;
+  updateTour: (tour: Tour, imageFile?: File) => Promise<void>;
+  deleteTour: (id: string) => Promise<void>;
 };
 
 const ToursContext = createContext<ToursContextType | undefined>(undefined);
 
+// Convert database row to app Tour type
+const convertRowToTour = (row: TourRow): Tour => ({
+  id: row.id,
+  name: row.name,
+  location: row.location,
+  image: row.image,
+  category: row.category,
+  description: row.description,
+  rating: row.rating,
+  originalPrice: row.original_price,
+  discountPrice: row.discount_price,
+  dates: {
+    start: new Date(row.start_date),
+    end: new Date(row.end_date),
+  },
+  participants: row.participants,
+});
+
 export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [tours, setTours] = useState<Tour[]>(() => {
-    // Try to get tours from localStorage
-    const savedTours = localStorage.getItem('tours');
-    return savedTours ? JSON.parse(savedTours, (key, value) => {
-      // Convert date strings back to Date objects
-      if (key === 'start' || key === 'end') {
-        return new Date(value);
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch tours from Supabase on component mount
+  useEffect(() => {
+    const fetchTours = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('tours')
+          .select('*');
+        
+        if (error) {
+          throw error;
+        }
+
+        if (data) {
+          const convertedTours = data.map(convertRowToTour);
+          setTours(convertedTours);
+        }
+      } catch (error) {
+        console.error('Error fetching tours:', error);
+        toast({
+          title: "Error loading tours",
+          description: "Could not load tours from database",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-      return value;
-    }) : initialTours;
-  });
-
-  const saveTours = (updatedTours: Tour[]) => {
-    localStorage.setItem('tours', JSON.stringify(updatedTours));
-    setTours(updatedTours);
-  };
-
-  const addTour = (tour: Omit<Tour, 'id'>) => {
-    const newTour = {
-      ...tour,
-      id: Math.random().toString(36).substring(2, 9),
-      rating: 5.0, // Default rating for new tours
     };
-    
-    const updatedTours = [...tours, newTour as Tour];
-    saveTours(updatedTours);
+
+    fetchTours();
+  }, []);
+
+  // Upload image file to storage and get URL
+  const uploadImage = async (file: File): Promise<string> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('tour-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL for the uploaded image
+      const { data: { publicUrl } } = supabase.storage
+        .from('tour-images')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
   };
 
-  const updateTour = (updatedTour: Tour) => {
-    const updatedTours = tours.map(tour => 
-      tour.id === updatedTour.id ? updatedTour : tour
-    );
-    saveTours(updatedTours);
+  // Add a new tour
+  const addTour = async (tour: Omit<Tour, 'id'>, imageFile?: File) => {
+    setLoading(true);
+    try {
+      let imageUrl = tour.image;
+      
+      // If file is provided, upload it first
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
+
+      const { data, error } = await supabase
+        .from('tours')
+        .insert({
+          name: tour.name,
+          location: tour.location,
+          image: imageUrl,
+          category: tour.category,
+          description: tour.description,
+          original_price: tour.originalPrice,
+          discount_price: tour.discountPrice,
+          start_date: tour.dates.start.toISOString(),
+          end_date: tour.dates.end.toISOString(),
+          participants: tour.participants,
+          rating: 5.0, // Default for new tours
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        const newTour = convertRowToTour(data as TourRow);
+        setTours(currentTours => [...currentTours, newTour]);
+      }
+    } catch (error) {
+      console.error('Error adding tour:', error);
+      toast({
+        title: "Error adding tour",
+        description: "Could not add tour to database",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deleteTour = (id: string) => {
-    const updatedTours = tours.filter(tour => tour.id !== id);
-    saveTours(updatedTours);
+  // Update an existing tour
+  const updateTour = async (updatedTour: Tour, imageFile?: File) => {
+    setLoading(true);
+    try {
+      let imageUrl = updatedTour.image;
+      
+      // If file is provided, upload it first
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
+
+      const { error } = await supabase
+        .from('tours')
+        .update({
+          name: updatedTour.name,
+          location: updatedTour.location,
+          image: imageUrl,
+          category: updatedTour.category,
+          description: updatedTour.description,
+          original_price: updatedTour.originalPrice,
+          discount_price: updatedTour.discountPrice,
+          start_date: updatedTour.dates.start.toISOString(),
+          end_date: updatedTour.dates.end.toISOString(),
+          participants: updatedTour.participants,
+          rating: updatedTour.rating,
+        })
+        .eq('id', updatedTour.id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update local state
+      setTours(currentTours => 
+        currentTours.map(tour => 
+          tour.id === updatedTour.id ? updatedTour : tour
+        )
+      );
+    } catch (error) {
+      console.error('Error updating tour:', error);
+      toast({
+        title: "Error updating tour",
+        description: "Could not update tour in database",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete a tour
+  const deleteTour = async (id: string) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('tours')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update local state
+      setTours(currentTours => currentTours.filter(tour => tour.id !== id));
+    } catch (error) {
+      console.error('Error deleting tour:', error);
+      toast({
+        title: "Error deleting tour",
+        description: "Could not delete tour from database",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <ToursContext.Provider value={{ tours, addTour, updateTour, deleteTour }}>
+    <ToursContext.Provider value={{ tours, loading, addTour, updateTour, deleteTour }}>
       {children}
     </ToursContext.Provider>
   );

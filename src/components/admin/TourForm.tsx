@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,9 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { CalendarIcon, ImageIcon } from "lucide-react";
+import { CalendarIcon, ImageIcon, Upload } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { toast } from "@/components/ui/use-toast";
 
 type DateRangeType = {
   start: Date;
@@ -32,7 +33,7 @@ type Tour = {
 
 type TourFormProps = {
   tour?: Tour | null;
-  onSubmit: (tour: Omit<Tour, 'id' | 'rating'> & { id?: string, rating?: number }) => void;
+  onSubmit: (tour: Omit<Tour, 'id' | 'rating'> & { id?: string, rating?: number }, imageFile?: File) => void;
 };
 
 const TourForm: React.FC<TourFormProps> = ({ tour, onSubmit }) => {
@@ -57,6 +58,9 @@ const TourForm: React.FC<TourFormProps> = ({ tour, onSubmit }) => {
 
   const [dateOpen, setDateOpen] = useState(false);
   const [dateType, setDateType] = useState<'start' | 'end'>('start');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(tour?.image || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
@@ -80,6 +84,43 @@ const TourForm: React.FC<TourFormProps> = ({ tour, onSubmit }) => {
     });
   };
 
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Create preview URL for the selected image
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    
+    // No need to set formData.image as we'll use the file directly
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -94,10 +135,10 @@ const TourForm: React.FC<TourFormProps> = ({ tour, onSubmit }) => {
         ...submissionData,
         id: tour.id,
         rating: tour.rating
-      });
+      }, imageFile || undefined);
     } else {
       const { id, rating, ...newTourData } = submissionData;
-      onSubmit(newTourData);
+      onSubmit(newTourData, imageFile || undefined);
     }
   };
 
@@ -168,31 +209,43 @@ const TourForm: React.FC<TourFormProps> = ({ tour, onSubmit }) => {
 
         <div className="space-y-4">
           <div>
-            <Label htmlFor="image">Tour Image URL *</Label>
-            <div className="mt-1 flex">
-              <Input
-                id="image"
-                name="image"
-                value={formData.image}
-                onChange={handleInputChange}
-                required
-                placeholder="Enter image URL"
-                className="flex-1"
+            <Label htmlFor="image">Tour Image</Label>
+            <div 
+              className="mt-1 border-2 border-dashed rounded-md border-gray-300 p-4 cursor-pointer hover:border-gray-400 transition-colors"
+              onClick={handleImageClick}
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
               />
+              
+              {previewUrl ? (
+                <div className="relative">
+                  <AspectRatio ratio={16 / 9} className="bg-muted">
+                    <img
+                      src={previewUrl}
+                      alt="Tour preview"
+                      className="rounded-md object-cover w-full h-full"
+                    />
+                  </AspectRatio>
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-md">
+                    <div className="text-white flex flex-col items-center">
+                      <Upload className="h-8 w-8 mb-1" />
+                      <span>Change Image</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-32 bg-gray-50 rounded-md">
+                  <ImageIcon className="h-8 w-8 text-gray-400 mb-1" />
+                  <p className="text-gray-500 text-sm">Click to upload an image</p>
+                  <p className="text-gray-400 text-xs">JPG, PNG, GIF up to 5MB</p>
+                </div>
+              )}
             </div>
-
-            {formData.image && (
-              <div className="mt-2 border rounded-md overflow-hidden h-32 bg-gray-50">
-                <img
-                  src={formData.image}
-                  alt="Tour preview"
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = 'https://via.placeholder.com/300x150?text=Invalid+Image+URL';
-                  }}
-                />
-              </div>
-            )}
           </div>
 
           <div className="space-y-4">
@@ -209,6 +262,7 @@ const TourForm: React.FC<TourFormProps> = ({ tour, onSubmit }) => {
                     <Button
                       variant="outline"
                       className="w-full justify-start text-left font-normal"
+                      type="button"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.dates.start ? format(formData.dates.start, "PPP") : <span>Start date</span>}
@@ -238,6 +292,7 @@ const TourForm: React.FC<TourFormProps> = ({ tour, onSubmit }) => {
                     <Button
                       variant="outline"
                       className="w-full justify-start text-left font-normal"
+                      type="button"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.dates.end ? format(formData.dates.end, "PPP") : <span>End date</span>}
