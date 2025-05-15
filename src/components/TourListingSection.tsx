@@ -77,17 +77,17 @@ const FilterButton: React.FC<{ name: string; active: boolean; onClick: () => voi
 
 const TourListingSection: React.FC = () => {
   const { tours } = useTours();
-  const [activeFilter, setActiveFilter] = useState('Featured');
+  const [activeFilter, setActiveFilter] = useState('All');
   
   // Get unique categories from the tours
   const availableFilters = Array.from(new Set(tours.map(tour => tour.category)));
-  // Ensure 'Featured' is always included
-  const filters = ['Featured', ...availableFilters.filter(f => f !== 'Featured')];
+  // Include 'All' as the first filter
+  const filters = ['All', ...availableFilters.filter(f => f !== 'All')];
   
   // Filter tours based on active filter
-  const filteredTours = activeFilter 
-    ? tours.filter(tour => tour.category === activeFilter)
-    : tours;
+  const filteredTours = activeFilter === 'All' 
+    ? tours 
+    : tours.filter(tour => tour.category === activeFilter);
   
   // Limit to 6 tours for display
   const displayedTours = filteredTours.slice(0, 6);
@@ -121,19 +121,25 @@ const TourListingSection: React.FC = () => {
         
         {/* Tour Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {displayedTours.map((tour) => (
-            <TourCard 
-              key={tour.id} 
-              id={tour.id}
-              name={tour.name} 
-              location={tour.location}
-              image={tour.image}
-              rating={tour.rating}
-              originalPrice={tour.originalPrice}
-              discountPrice={tour.discountPrice}
-              dateRange={`${format(tour.dates.start, "MMM d")} - ${format(tour.dates.end, "MMM d, yyyy")}`}
-            />
-          ))}
+          {displayedTours.length > 0 ? (
+            displayedTours.map((tour) => (
+              <TourCard 
+                key={tour.id} 
+                id={tour.id}
+                name={tour.name} 
+                location={tour.location}
+                image={tour.image}
+                rating={tour.rating}
+                originalPrice={tour.originalPrice}
+                discountPrice={tour.discountPrice}
+                dateRange={`${format(tour.dates.start, "MMM d")} - ${format(tour.dates.end, "MMM d, yyyy")}`}
+              />
+            ))
+          ) : (
+            <div className="col-span-4 text-center py-8">
+              <p className="text-gray-500">No tours available. Please check back later.</p>
+            </div>
+          )}
         </div>
         
         {/* View All Button */}

@@ -2,8 +2,8 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
+import TestimonialsSection from '@/components/TestimonialsSection';
 import TourListingSection from '@/components/TourListingSection';
-import DestinationsSection from '@/components/DestinationsSection';
 import Footer from '@/components/Footer';
 
 const Index = () => {
@@ -11,8 +11,8 @@ const Index = () => {
     <div className="min-h-screen bg-white">
       <Navbar />
       <HeroSection />
+      <TestimonialsSection />
       <TourListingSection />
-      <DestinationsSection />
       <Footer />
     </div>
   );

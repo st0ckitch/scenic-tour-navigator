@@ -3,10 +3,9 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
-const HeroSection: React.FC = () => {
-  const [searchType, setSearchType] = useState<'hotel' | 'destination'>('hotel');
-  
+const HeroSection: React.FC = () => {  
   return (
     <div className="relative h-screen">
       {/* Hero Background */}
@@ -21,54 +20,57 @@ const HeroSection: React.FC = () => {
       </div>
       
       {/* Hero Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-white px-4">
-        <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4 text-center">
-          Welcome to Lombok
-        </h1>
-        <p className="text-xl md:text-2xl font-light mb-12 text-center">
-          Adventure and Tranquility
-        </p>
+      <div className="relative z-10 h-full flex flex-col md:flex-row items-center justify-center text-white px-4">
+        <div className="md:w-1/2 text-center md:text-left mb-8 md:mb-0 md:pr-10">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4">
+            Welcome to Georgia
+          </h1>
+          <p className="text-xl md:text-2xl font-light mb-8">
+            Adventure and Tranquility in the Heart of the Caucasus
+          </p>
+        </div>
         
-        {/* Search Box */}
-        <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6 text-gray-800">
-          <div className="flex flex-col space-y-4">
-            <div className="flex space-x-4 mb-2">
-              <h2 className="text-xl font-bold">Discover Hotels</h2>
-            </div>
+        {/* Custom Tour Form */}
+        <div className="md:w-1/2 md:max-w-md">
+          <div className="bg-white rounded-lg shadow-lg p-6 text-gray-800">
+            <h2 className="text-xl font-bold mb-4">Create Your Custom Tour</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Let us plan your perfect Georgian adventure
+            </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form className="space-y-4">
               <div>
-                <label className="text-sm text-gray-500 mb-1 block">City or Hotel Name</label>
-                <Input placeholder="Search location or hotel" className="w-full" />
+                <label className="text-sm text-gray-500 mb-1 block">Your Destination</label>
+                <Input placeholder="Where do you want to go?" className="w-full" />
               </div>
+              
               <div>
-                <label className="text-sm text-gray-500 mb-1 block">Hotel Name</label>
-                <Input placeholder="Hotel name (optional)" className="w-full" />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-gray-500 mb-1 block">Check-In</label>
+                <label className="text-sm text-gray-500 mb-1 block">Arrival Date</label>
                 <div className="relative">
                   <Input type="date" placeholder="Select date" className="w-full pl-10" />
                   <Calendar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                 </div>
               </div>
+              
               <div>
                 <label className="text-sm text-gray-500 mb-1 block">Duration</label>
-                <Input type="number" placeholder="Number of nights" className="w-full" min="1" defaultValue="1" />
+                <Input type="number" placeholder="Number of days" className="w-full" min="1" defaultValue="3" />
               </div>
-            </div>
-            
-            <div>
-              <label className="text-sm text-gray-500 mb-1 block">Guests And Rooms</label>
-              <Input placeholder="2 Adults, 0 Children, 1 Room" className="w-full" />
-            </div>
-            
-            <Button className="w-full bg-black hover:bg-gray-800 text-white py-2 rounded-md transition-colors">
-              Search Hotel
-            </Button>
+              
+              <div>
+                <label className="text-sm text-gray-500 mb-1 block">Group Size</label>
+                <Input type="number" placeholder="Number of travelers" className="w-full" min="1" defaultValue="2" />
+              </div>
+              
+              <div>
+                <label className="text-sm text-gray-500 mb-1 block">Special Requests</label>
+                <Textarea placeholder="Tell us about your interests" className="w-full" />
+              </div>
+              
+              <Button className="w-full bg-black hover:bg-gray-800 text-white py-2 rounded-md transition-colors">
+                Request Custom Tour
+              </Button>
+            </form>
           </div>
         </div>
       </div>
