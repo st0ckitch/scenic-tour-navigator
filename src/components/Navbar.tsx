@@ -80,10 +80,7 @@ const Navbar: React.FC = () => {
               </Button>
               <Button 
                 className="bg-travel-coral text-white hover:bg-orange-600"
-                onClick={() => {
-                  navigate('/auth');
-                  setIsLogin(false);
-                }}
+                onClick={() => navigate('/auth')}
               >
                 Register
               </Button>
@@ -131,10 +128,7 @@ const Navbar: React.FC = () => {
                 </Button>
                 <Button 
                   className="w-full bg-travel-coral text-white hover:bg-orange-600"
-                  onClick={() => {
-                    navigate('/auth');
-                    setIsLogin(false);
-                  }}
+                  onClick={() => navigate('/auth')}
                 >
                   Register
                 </Button>
