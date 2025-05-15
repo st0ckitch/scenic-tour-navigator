@@ -99,3 +99,8 @@
 .star-rating {
   @apply flex items-center;
 }
+
+/* Navbar menu text shadow for better visibility on transparent background */
+.transparent-navbar-link {
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+}

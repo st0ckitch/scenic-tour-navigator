@@ -49,7 +49,7 @@ const Navbar: React.FC = () => {
               key={item} 
               to={item === 'Home' ? '/' : item === 'Tours' ? '/tours' : '#'} 
               className={`font-medium hover:text-travel-coral transition-colors ${
-                scrolled ? 'text-gray-700' : 'text-white'
+                scrolled ? 'text-gray-700' : 'text-black'
               }`}
             >
               {item}
@@ -59,11 +59,11 @@ const Navbar: React.FC = () => {
 
         {/* Right Side Buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          <div className={`${scrolled ? 'text-gray-700' : 'text-white'} font-medium`}>EN</div>
+          <div className={`${scrolled ? 'text-gray-700' : 'text-black'} font-medium`}>EN</div>
           {user ? (
             <Button 
               variant="outline" 
-              className={`${scrolled ? 'border-gray-300 text-gray-700' : 'border-white text-white'}`}
+              className={`${scrolled ? 'border-gray-300 text-gray-700' : 'border-black text-black'}`}
               onClick={handleSignOut}
             >
               <LogOut className="w-4 h-4 mr-2" />
@@ -73,7 +73,7 @@ const Navbar: React.FC = () => {
             <>
               <Button 
                 variant="outline" 
-                className={`${scrolled ? 'border-gray-300 text-gray-700' : 'border-white text-white'}`}
+                className={`${scrolled ? 'border-gray-300 text-gray-700' : 'border-black text-black'}`}
                 onClick={() => navigate('/auth')}
               >
                 Login
@@ -94,7 +94,7 @@ const Navbar: React.FC = () => {
             variant="ghost" 
             size="icon"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`${scrolled ? 'text-gray-700' : 'text-white'}`}
+            className={`${scrolled ? 'text-gray-700' : 'text-black'}`}
           >
             <Menu />
           </Button>
