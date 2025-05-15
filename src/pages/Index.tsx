@@ -2,9 +2,8 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
-import UnmissableExperienceSection from '@/components/UnmissableExperienceSection';
-import DestinationsSection from '@/components/DestinationsSection';
 import TourListingSection from '@/components/TourListingSection';
+import DestinationsSection from '@/components/DestinationsSection';
 import Footer from '@/components/Footer';
 
 const Index = () => {
@@ -12,9 +11,8 @@ const Index = () => {
     <div className="min-h-screen bg-white">
       <Navbar />
       <HeroSection />
-      <UnmissableExperienceSection />
-      <DestinationsSection />
       <TourListingSection />
+      <DestinationsSection />
       <Footer />
     </div>
   );

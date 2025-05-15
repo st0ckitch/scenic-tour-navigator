@@ -21,12 +21,15 @@ const TourCard: React.FC<TourCardProps> = ({
   id, name, location, image, rating, originalPrice, discountPrice, dateRange 
 }) => {
   return (
-    <Link to={`/tour/${id}`} className="tour-card animate-fade-in block">
+    <Link to={`/tour/${id}`} className="tour-card block group hover:shadow-lg transition-shadow duration-300">
       <div className="relative overflow-hidden">
         <img 
           src={image}
           alt={name}
-          className="tour-image group-hover:scale-105 transition-transform duration-500"
+          className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500"
+          onError={(e) => {
+            e.currentTarget.src = 'https://via.placeholder.com/400x225?text=No+Image';
+          }}
         />
       </div>
       <div className="p-4">
