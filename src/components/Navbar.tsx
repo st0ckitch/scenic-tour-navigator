@@ -29,7 +29,7 @@ const Navbar: React.FC = () => {
         {/* Logo */}
         <div className="text-2xl font-bold font-heading">
           <a href="/" className={`${scrolled ? 'text-blue-600' : 'text-white'}`}>
-            TRIPPIN
+            Geosides
           </a>
         </div>
 
