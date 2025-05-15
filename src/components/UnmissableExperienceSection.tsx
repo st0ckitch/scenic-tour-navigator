@@ -6,29 +6,29 @@ const UnmissableExperienceSection: React.FC = () => {
   // Array of images with location names and random rotation angles
   const experiencePhotos = [
     {
-      src: "https://images.unsplash.com/photo-1558028002-cbc5e0e70bcc?auto=format&fit=crop&w=800&q=80",
-      location: "Kazbegi Mountain",
+      src: "/lovable-uploads/f185a17f-5be7-4fe4-9d0a-54ff88ce4e28.png",
+      location: "Gergeti Trinity Church",
       rotation: Math.floor(Math.random() * 16) - 8,
     },
     {
-      src: "https://images.unsplash.com/photo-1587927026368-147df11506b0?auto=format&fit=crop&w=800&q=80",
-      location: "Old Tbilisi",
+      src: "/lovable-uploads/4fae18dc-02be-4910-af5b-b244939a0829.png",
+      location: "Jvari Monastery",
       rotation: Math.floor(Math.random() * 16) - 8,
     },
     {
-      src: "https://images.unsplash.com/photo-1583778518258-8552c28c4dd8?auto=format&fit=crop&w=800&q=80",
-      location: "Batumi Beach",
+      src: "/lovable-uploads/82fd0315-41f5-4c55-b27b-ec03987edd04.png",
+      location: "Martvili Canyon",
       rotation: Math.floor(Math.random() * 16) - 8,
     },
     {
-      src: "https://images.unsplash.com/photo-1614854262340-ab1ca7d079c7?auto=format&fit=crop&w=800&q=80",
-      location: "Vardzia",
+      src: "/lovable-uploads/07228c80-5116-4bc0-a82f-cf39a5acbff6.png",
+      location: "Mirveti Waterfall",
       rotation: Math.floor(Math.random() * 16) - 8,
     },
   ];
 
   return (
-    <section className="py-16 container mx-auto px-4 overflow-hidden">
+    <section className="py-32 container mx-auto px-4 overflow-hidden">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
         {/* Left side - Chaotically placed photos */}
         <div className="relative h-[600px]">

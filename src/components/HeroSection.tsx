@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const HeroSection: React.FC = () => {  
   return (
-    <div className="relative h-screen">
+    <div className="relative h-screen mb-32">
       {/* Hero Background */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -20,7 +20,7 @@ const HeroSection: React.FC = () => {
       </div>
       
       {/* Hero Content */}
-      <div className="relative z-10 h-full flex flex-col md:flex-row items-center justify-center text-white px-4 pt-40">
+      <div className="relative z-10 h-full flex flex-col md:flex-row items-center justify-center text-white px-4 pt-120">
         <div className="md:w-1/2 text-center md:text-left mb-8 md:mb-0 md:pr-10">
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-4">
             Welcome to Georgia
