@@ -6,23 +6,23 @@ const UnmissableExperienceSection: React.FC = () => {
   // Array of images with location names and random rotation angles
   const experiencePhotos = [
     {
-      src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=800&q=80",
-      location: "Kuta Beach",
+      src: "https://images.unsplash.com/photo-1558028002-cbc5e0e70bcc?auto=format&fit=crop&w=800&q=80",
+      location: "Kazbegi Mountain",
       rotation: Math.floor(Math.random() * 16) - 8,
     },
     {
-      src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
-      location: "Rinjani Mountain",
+      src: "https://images.unsplash.com/photo-1587927026368-147df11506b0?auto=format&fit=crop&w=800&q=80",
+      location: "Old Tbilisi",
       rotation: Math.floor(Math.random() * 16) - 8,
     },
     {
-      src: "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=800&q=80",
-      location: "Sendang Gile",
+      src: "https://images.unsplash.com/photo-1583778518258-8552c28c4dd8?auto=format&fit=crop&w=800&q=80",
+      location: "Batumi Beach",
       rotation: Math.floor(Math.random() * 16) - 8,
     },
     {
-      src: "https://images.unsplash.com/photo-1469041797191-50ace28483c3?auto=format&fit=crop&w=800&q=80",
-      location: "Gili Island",
+      src: "https://images.unsplash.com/photo-1614854262340-ab1ca7d079c7?auto=format&fit=crop&w=800&q=80",
+      location: "Vardzia",
       rotation: Math.floor(Math.random() * 16) - 8,
     },
   ];
@@ -61,10 +61,10 @@ const UnmissableExperienceSection: React.FC = () => {
         <div className="space-y-8">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold mb-3">
-              Unmissable Experiences in Lombok
+              Unmissable Experiences in Georgia
             </h2>
             <p className="text-lg text-gray-600">
-              Discover breathtaking views, pristine beaches, and unforgettable adventures
+              Discover breathtaking views, ancient monasteries, and unforgettable adventures
               that have captured the hearts of travelers from around the world.
             </p>
           </div>
@@ -108,8 +108,8 @@ const UnmissableExperienceSection: React.FC = () => {
 
           <div className="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-100">
             <p className="text-gray-600 italic mb-3">
-              "The beaches in Lombok stole my heart. The serenity of the waves, the golden sands, 
-              and the warm sun made every moment magical. A must-visit for anyone seeking paradise on earth!"
+              "The mountains in Georgia stole my heart. The breathtaking views, the ancient churches, 
+              and the warm hospitality made every moment magical. A must-visit for anyone seeking adventure!"
             </p>
             <div className="flex items-center">
               <img 
@@ -125,7 +125,7 @@ const UnmissableExperienceSection: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {['LANDSCAPE', 'EXCURSION', 'JOURNEY', 'EXCITING', 'BEACH'].map((tag) => (
+            {['LANDSCAPE', 'ADVENTURE', 'HISTORY', 'EXCITING', 'CULTURE'].map((tag) => (
               <span 
                 key={tag} 
                 className="tag bg-travel-sky px-4 py-1 rounded-full text-white text-sm"
