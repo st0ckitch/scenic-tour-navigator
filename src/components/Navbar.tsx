@@ -37,7 +37,7 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo */}
         <div className="text-2xl font-bold font-heading">
-          <Link to="/" className={`${scrolled ? 'text-blue-600' : 'text-white'}`}>
+          <Link to="/" className={`${scrolled ? 'text-blue-600' : 'text-black font-extrabold'} text-shadow`}>
             Geosides
           </Link>
         </div>
