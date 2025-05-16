@@ -10,6 +10,7 @@ import { useTours } from '@/contexts/ToursContext';
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { TourTranslation } from '@/types/tour';
 
 const ToursPage: React.FC = () => {
   const { tours, loading } = useTours();
@@ -90,7 +91,8 @@ const ToursPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTours.map((tour) => {
                 // Get the tour translation for the current language or fallback to default
-                const translation = tour.translations?.[language] || {};
+                // Explicitly type as TourTranslation instead of empty object to fix TypeScript errors
+                const translation = (tour.translations?.[language] || {}) as TourTranslation;
                 const tourName = translation.name || tour.name || 'Unnamed Tour';
                 const tourLocation = translation.location || tour.location || 'Unknown location';
                 
