@@ -116,11 +116,10 @@ const ToursPage: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTours.map((tour) => {
-                // Get the tour translation for the current language or fallback to default
-                // Explicitly type as TourTranslation instead of empty object to fix TypeScript errors
-                const translation = (tour.translations?.[language] || {}) as TourTranslation;
-                const tourName = translation.name || tour.name || 'Unnamed Tour';
-                const tourLocation = translation.location || tour.location || 'Unknown location';
+                // Get the tour name directly from the tour object - corresponds to the current language
+                // This matches how the TourListingSection handles tour names
+                const tourName = tour.translations?.[language]?.name || '';
+                const tourLocation = tour.translations?.[language]?.location || '';
                 const isImageLoaded = imageLoadingStates[tour.id] === true;
                 
                 return (
