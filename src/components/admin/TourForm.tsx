@@ -20,7 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Image, Plus, X } from "lucide-react";
 import TranslationForm from './TranslationForm';
 import { Language, useLanguage } from '@/contexts/LanguageContext';
 import { Tour, TourTranslation } from '@/types/tour';
@@ -305,18 +305,37 @@ const TourForm: React.FC<TourFormProps> = ({
             <div>
               <div className="mb-6">
                 <FormLabel>Tour Image</FormLabel>
-                <div className="mt-2 border-2 border-dashed border-gray-300 rounded-md p-4">
-                  <label htmlFor="image-upload" className="cursor-pointer">
+                <div className="mt-2 border-2 border-dashed border-gray-300 rounded-md p-4 hover:border-travel-coral transition-colors">
+                  <label htmlFor="image-upload" className="cursor-pointer block">
                     {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Tour preview"
-                        className="h-48 w-full object-cover rounded-md"
-                      />
+                      <div className="relative">
+                        <img
+                          src={imagePreview}
+                          alt="Tour preview"
+                          className="h-48 w-full object-cover rounded-md"
+                        />
+                        <button 
+                          type="button"
+                          className="absolute top-2 right-2 bg-gray-900 bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-80"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setImageFile(null);
+                            setImagePreview('');
+                            form.setValue('image', '');
+                          }}
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
                     ) : (
-                      <div className="text-center py-10">
-                        <p className="text-sm text-gray-500">
+                      <div className="flex flex-col items-center justify-center py-10 text-center">
+                        <Image className="h-14 w-14 text-gray-400 mb-2" />
+                        <p className="text-sm font-medium text-gray-600 mb-1">
                           Click to upload an image
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          PNG, JPG, or JPEG (max. 10MB)
                         </p>
                       </div>
                     )}
@@ -329,11 +348,6 @@ const TourForm: React.FC<TourFormProps> = ({
                     />
                   </label>
                 </div>
-                {!imagePreview && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    No image selected. A placeholder will be used.
-                  </p>
-                )}
               </div>
             </div>
           </div>
