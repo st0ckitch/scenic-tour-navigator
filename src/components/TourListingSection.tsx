@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
@@ -124,9 +123,10 @@ const TourListingSection: React.FC = () => {
         
         if (imagesError) {
           console.error("Error fetching images:", imagesError);
+          // Continue without images
         }
         
-        // 3. Organize translations by tour_id
+        // Organize translations by tour_id
         const translationsByTourId: Record<string, TourTranslation[]> = {};
         translationsData.forEach((translation) => {
           if (!translationsByTourId[translation.tour_id]) {
@@ -134,7 +134,7 @@ const TourListingSection: React.FC = () => {
           }
           translationsByTourId[translation.tour_id].push({
             name: translation.name,
-            description: translation.description || translation.shortDescription,
+            description: translation.description,
             longDescription: translation.longDescription || translation.description,
             location: translation.location,
             language: translation.language as Language
@@ -142,7 +142,7 @@ const TourListingSection: React.FC = () => {
         });
         
         // Organize images by tour_id
-        const imagesByTourId: Record<string, { id: string, url: string, isMain: boolean }[]> = {};
+        const imagesByTourId: Record<string, any[]> = {};
         if (imagesData && imagesData.length > 0) {
           imagesData.forEach((image) => {
             if (!imagesByTourId[image.tour_id]) {
@@ -194,6 +194,13 @@ const TourListingSection: React.FC = () => {
           // Get images for this tour
           const tourImages = imagesByTourId[tour.id] || [];
           
+          // Find main image
+          let mainImage = tour.image;
+          const mainImageObj = tourImages.find(img => img.isMain);
+          if (mainImageObj) {
+            mainImage = mainImageObj.url;
+          }
+          
           return {
             id: tour.id,
             category: tour.category,
@@ -201,7 +208,7 @@ const TourListingSection: React.FC = () => {
             discountPrice: tour.discount_price ? Number(tour.discount_price) : undefined,
             participants: tour.participants || undefined,
             rating: Number(tour.rating),
-            image: (tourImages.find(img => img.isMain)?.url || tour.image || undefined),
+            image: mainImage || undefined,
             images: tourImages,
             dates: {
               start: new Date(tour.start_date),

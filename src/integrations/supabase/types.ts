@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      tour_images: {
+        Row: {
+          created_at: string
+          id: string
+          is_main: boolean
+          tour_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_main?: boolean
+          tour_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_main?: boolean
+          tour_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tour_images_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "tours"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tour_translations: {
         Row: {
           created_at: string
@@ -16,6 +48,7 @@ export type Database = {
           id: string
           language: string
           location: string
+          longDescription: string | null
           name: string
           tour_id: string
         }
@@ -25,6 +58,7 @@ export type Database = {
           id?: string
           language: string
           location: string
+          longDescription?: string | null
           name: string
           tour_id: string
         }
@@ -34,6 +68,7 @@ export type Database = {
           id?: string
           language?: string
           location?: string
+          longDescription?: string | null
           name?: string
           tour_id?: string
         }
@@ -109,7 +144,47 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      tour_translations_view: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string | null
+          language: string | null
+          location: string | null
+          longDescription: string | null
+          name: string | null
+          tour_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          language?: string | null
+          location?: string | null
+          longDescription?: string | null
+          name?: string | null
+          tour_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          language?: string | null
+          location?: string | null
+          longDescription?: string | null
+          name?: string | null
+          tour_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tour_translations_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "tours"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never

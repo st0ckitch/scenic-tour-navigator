@@ -20,9 +20,9 @@ const AdminPanel: React.FC = () => {
   const navigate = useNavigate();
 
   // Handle adding a tour
-  const handleAddTour = async (tourData: any, imageFile?: File) => {
+  const handleAddTour = async (tourData: any, imageFiles?: File[]) => {
     try {
-      const result = await createTour(tourData, imageFile);
+      const result = await createTour(tourData, imageFiles);
       if (result) {
         setIsAddingTour(false);
         refetch();
@@ -33,9 +33,9 @@ const AdminPanel: React.FC = () => {
   };
 
   // Handle updating a tour
-  const handleUpdateTour = async (tourData: any, imageFile?: File) => {
+  const handleUpdateTour = async (tourData: any, imageFiles?: File[]) => {
     try {
-      const success = await updateTour(tourData, imageFile);
+      const success = await updateTour(tourData, imageFiles);
       if (success) {
         setEditingTour(null);
         refetch();
@@ -78,11 +78,11 @@ const AdminPanel: React.FC = () => {
   const showForm = isAddingTour || editingTour !== null;
   
   // Submit handler - unified for add and edit
-  const handleSubmit = async (tourData: any, imageFile?: File) => {
+  const handleSubmit = async (tourData: any, imageFiles?: File[]) => {
     if (editingTour) {
-      await handleUpdateTour(tourData, imageFile);
+      await handleUpdateTour(tourData, imageFiles);
     } else {
-      await handleAddTour(tourData, imageFile);
+      await handleAddTour(tourData, imageFiles);
     }
   };
 

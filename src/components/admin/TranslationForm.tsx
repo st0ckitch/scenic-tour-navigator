@@ -95,7 +95,7 @@ const TranslationForm: React.FC<TranslationFormProps> = ({
         validatedTranslations[lang].description = validatedTranslations.en.description;
       }
       if (!validatedTranslations[lang].longDescription) {
-        validatedTranslations[lang].longDescription = validatedTranslations.en.longDescription || validatedTranslations.en.description;
+        validatedTranslations[lang].longDescription = validatedTranslations.en.longDescription;
       }
       if (!validatedTranslations[lang].location) {
         validatedTranslations[lang].location = validatedTranslations.en.location;

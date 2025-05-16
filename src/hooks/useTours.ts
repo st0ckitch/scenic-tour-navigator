@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tour, TourTranslation } from '@/types/tour';
 import { Language } from '@/contexts/LanguageContext';
 import { toast } from "@/components/ui/use-toast";
+import { TourImage } from './useTourOperations';
 
 export function useTours() {
   const [tours, setTours] = useState<Tour[]>([]);
@@ -34,6 +35,16 @@ export function useTours() {
         throw translationsError;
       }
       
+      // 3. Fetch all tour images
+      const { data: imagesData, error: imagesError } = await supabase
+        .from('tour_images')
+        .select('*');
+      
+      if (imagesError) {
+        console.error("Error fetching images:", imagesError);
+        // Continue without images
+      }
+      
       // 3. Organize translations by tour_id
       const translationsByTourId: Record<string, TourTranslation[]> = {};
       translationsData.forEach((translation) => {
@@ -43,30 +54,49 @@ export function useTours() {
         translationsByTourId[translation.tour_id].push({
           name: translation.name,
           description: translation.description,
+          longDescription: translation.longDescription || translation.description,
           location: translation.location,
           language: translation.language as Language
         });
       });
       
-      // 4. Combine tours and translations
+      // Organize images by tour_id
+      const imagesByTourId: Record<string, TourImage[]> = {};
+      if (imagesData && imagesData.length > 0) {
+        imagesData.forEach((image) => {
+          if (!imagesByTourId[image.tour_id]) {
+            imagesByTourId[image.tour_id] = [];
+          }
+          imagesByTourId[image.tour_id].push({
+            id: image.id,
+            url: image.url,
+            isMain: image.is_main
+          });
+        });
+      }
+      
+      // 4. Combine tours, translations, and images
       const formattedTours = toursData.map((tour): Tour => {
-        // Default translations if we don't have any
+        // Default translations
         const defaultTranslations: Record<Language, TourTranslation> = {
           en: {
             name: "Untitled Tour", 
             description: "No description", 
+            longDescription: "No detailed description available",
             location: "Unknown location",
             language: "en"
           },
           ka: {
             name: "Untitled Tour", 
             description: "No description", 
+            longDescription: "No detailed description available",
             location: "Unknown location",
             language: "ka"
           },
           ru: {
             name: "Untitled Tour", 
             description: "No description", 
+            longDescription: "No detailed description available",
             location: "Unknown location",
             language: "ru"
           }
@@ -80,6 +110,16 @@ export function useTours() {
           });
         }
         
+        // Get images for this tour
+        const tourImages = imagesByTourId[tour.id] || [];
+        
+        // Find main image
+        let mainImage = tour.image;
+        const mainImageObj = tourImages.find(img => img.isMain);
+        if (mainImageObj) {
+          mainImage = mainImageObj.url;
+        }
+        
         return {
           id: tour.id,
           category: tour.category,
@@ -87,7 +127,8 @@ export function useTours() {
           discountPrice: tour.discount_price ? Number(tour.discount_price) : undefined,
           participants: tour.participants || undefined,
           rating: Number(tour.rating),
-          image: tour.image || undefined,
+          image: mainImage || undefined,
+          images: tourImages,
           dates: {
             start: new Date(tour.start_date),
             end: new Date(tour.end_date)

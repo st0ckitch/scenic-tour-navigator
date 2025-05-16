@@ -9,8 +9,15 @@ export type TourDates = {
 export type TourTranslation = {
   name: string;
   description: string;
+  longDescription?: string;
   location: string;
   language: Language;
+};
+
+export type TourImage = {
+  id: string;
+  url: string;
+  isMain: boolean;
 };
 
 export type Tour = {
@@ -21,6 +28,8 @@ export type Tour = {
   participants?: number;
   rating: number;
   image?: string;
+  images?: TourImage[];
+  existingImages?: TourImage[];
   dates: TourDates;
   translations: Record<Language, TourTranslation>;
 };

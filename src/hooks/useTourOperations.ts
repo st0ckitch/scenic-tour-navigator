@@ -3,7 +3,13 @@ import { useState } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Language } from '@/contexts/LanguageContext';
-import { Tour, NewTour, TourTranslation, TourImage } from '@/types/tour';
+import { Tour, NewTour, TourTranslation } from '@/types/tour';
+
+export type TourImage = {
+  id: string;
+  url: string;
+  isMain: boolean;
+};
 
 export function useTourOperations() {
   const [loading, setLoading] = useState(false);
@@ -194,23 +200,35 @@ export function useTourOperations() {
         const existingImageIds = tour.existingImages.map(img => img.id);
         console.log("Existing image IDs:", existingImageIds);
         
-        // Delete images that are not in the existingImages list
-        const { error: deleteImagesError } = await supabase
-          .from('tour_images')
-          .delete()
-          .eq('tour_id', tour.id)
-          .not('id', 'in', `(${existingImageIds.join(',')})`);
-        
-        if (deleteImagesError && deleteImagesError.code !== '22P02') { // Ignore empty array error
-          console.error("Error deleting removed images:", deleteImagesError);
-        }
-        
-        // Update main image flag
-        for (const image of tour.existingImages) {
-          await supabase
+        if (existingImageIds.length > 0) {
+          // Delete images that are not in the existingImages list
+          const { error: deleteImagesError } = await supabase
             .from('tour_images')
-            .update({ is_main: image.isMain })
-            .eq('id', image.id);
+            .delete()
+            .eq('tour_id', tour.id)
+            .not('id', 'in', `(${existingImageIds.join(',')})`);
+          
+          if (deleteImagesError) {
+            console.error("Error deleting removed images:", deleteImagesError);
+          }
+          
+          // Update main image flag
+          for (const image of tour.existingImages) {
+            await supabase
+              .from('tour_images')
+              .update({ is_main: image.isMain })
+              .eq('id', image.id);
+          }
+        } else {
+          // If no existing images are kept, delete all images for this tour
+          const { error: deleteAllImagesError } = await supabase
+            .from('tour_images')
+            .delete()
+            .eq('tour_id', tour.id);
+          
+          if (deleteAllImagesError) {
+            console.error("Error deleting all tour images:", deleteAllImagesError);
+          }
         }
       }
       
