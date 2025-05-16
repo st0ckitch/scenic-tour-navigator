@@ -8,6 +8,7 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isAdmin: boolean;  // Added isAdmin property
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -19,6 +20,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -27,6 +29,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.log("Auth state changed:", event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Check if the user is admin (email is admin@example.com)
+        if (session?.user) {
+          const userIsAdmin = session.user.email === "admin@example.com";
+          setIsAdmin(userIsAdmin);
+        } else {
+          setIsAdmin(false);
+        }
+        
         setLoading(false);
       }
     );
@@ -36,6 +47,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log("Existing session check:", session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Check if the user is admin (email is admin@example.com)
+      if (session?.user) {
+        const userIsAdmin = session.user.email === "admin@example.com";
+        setIsAdmin(userIsAdmin);
+      }
+      
       setLoading(false);
     });
 
@@ -100,7 +118,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
