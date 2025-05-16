@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,8 @@ const AdminTourPanel: React.FC = () => {
         title: "Tour Added",
         description: `${tour.name} has been added successfully.`,
       });
+    } catch (error) {
+      console.error("Error adding tour:", error);
     } finally {
       setIsProcessing(false);
     }

@@ -39,6 +39,24 @@ type TourMetadata = {
   translations?: Record<Language, TourTranslation>;
 }
 
+// Define Supabase tour response type
+type SupabaseTourResponse = {
+  id: string;
+  name: string;
+  description: string;
+  location: string;
+  image: string | null;
+  rating: number;
+  original_price: number;
+  discount_price: number | null;
+  category: string;
+  participants: number | null;
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  metadata: TourMetadata | null;
+};
+
 // Define context type
 type ToursContextType = {
   tours: Tour[];
@@ -72,7 +90,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
         
         // Transform Supabase data to Tour type
-        const transformedTours: Tour[] = data.map(tour => {
+        const transformedTours: Tour[] = data.map((tour: SupabaseTourResponse) => {
           // Create default translations object
           const defaultTranslations: Record<Language, TourTranslation> = {
             en: {
@@ -96,8 +114,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           };
           
           // Check if metadata exists and has translations
-          const metadata = tour.metadata as TourMetadata | undefined;
-          const translations = metadata?.translations || defaultTranslations;
+          const translations = tour.metadata?.translations || defaultTranslations;
           
           return {
             id: tour.id,
@@ -197,6 +214,8 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
       };
       
+      console.log('Sending tour data to Supabase:', supabaseTour);
+      
       // Insert into Supabase
       const { data, error } = await supabase
         .from('tours')
@@ -204,30 +223,39 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         .select();
       
       if (error) {
+        console.error('Supabase error:', error);
         throw error;
       }
       
+      if (!data || data.length === 0) {
+        throw new Error('No data returned from Supabase after inserting tour');
+      }
+      
+      console.log('Tour created successfully, Supabase response:', data);
+      
+      const createdTour = data[0] as SupabaseTourResponse;
+      
       // Create Tour object from response
       const newTour: Tour = {
-        id: data[0].id,
-        name: data[0].name,
-        description: data[0].description,
-        location: data[0].location,
-        image: data[0].image || '',
-        rating: Number(data[0].rating),
-        originalPrice: Number(data[0].original_price),
-        discountPrice: data[0].discount_price ? Number(data[0].discount_price) : undefined,
-        category: data[0].category,
-        participants: data[0].participants || undefined,
+        id: createdTour.id,
+        name: createdTour.name,
+        description: createdTour.description,
+        location: createdTour.location,
+        image: createdTour.image || '',
+        rating: Number(createdTour.rating),
+        originalPrice: Number(createdTour.original_price),
+        discountPrice: createdTour.discount_price ? Number(createdTour.discount_price) : undefined,
+        category: createdTour.category,
+        participants: createdTour.participants || undefined,
         dates: {
-          start: new Date(data[0].start_date),
-          end: new Date(data[0].end_date)
+          start: new Date(createdTour.start_date),
+          end: new Date(createdTour.end_date)
         },
-        translations: (data[0].metadata as TourMetadata)?.translations || {
+        translations: createdTour.metadata?.translations || {
           en: {
-            name: data[0].name,
-            description: data[0].description,
-            location: data[0].location,
+            name: createdTour.name,
+            description: createdTour.description,
+            location: createdTour.location,
             language: 'en'
           },
           ka: {
@@ -247,6 +275,11 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       // Update local state
       setTours(prevTours => [...prevTours, newTour]);
+      
+      toast({
+        title: "Success",
+        description: "Tour created successfully!",
+      });
       
       return Promise.resolve();
     } catch (error) {
@@ -331,6 +364,11 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         )
       );
       
+      toast({
+        title: "Success",
+        description: "Tour updated successfully!",
+      });
+      
       return Promise.resolve();
     } catch (error) {
       console.error('Failed to update tour:', error);
@@ -362,6 +400,11 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       // Update local state
       setTours(prevTours => prevTours.filter(tour => tour.id !== id));
+      
+      toast({
+        title: "Success",
+        description: "Tour deleted successfully!",
+      });
       
       return Promise.resolve();
     } catch (error) {
