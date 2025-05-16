@@ -6,11 +6,10 @@ import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  adminOnly?: boolean;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, adminOnly = false }) => {
-  const { user, loading } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -20,24 +19,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, adminOnly = f
     );
   }
 
-  // For admin routes, check if the user exists and has admin role in user_metadata
-  if (adminOnly) {
-    if (!user) {
-      // If not logged in at all, redirect to auth
-      return <Navigate to="/auth?redirect=/admin" />;
-    }
-    
-    // Optional: check for admin role in metadata
-    // For now, we're just checking if the user has the email "admin@example.com"
-    const isAdmin = user.email === "admin@example.com";
-    
-    if (!isAdmin) {
-      // If logged in but not admin, redirect to home
-      return <Navigate to="/" />;
-    }
-  } else if (!user) {
-    // For non-admin routes, just check if user exists
-    return <Navigate to="/auth" />;
+  // Only admin can access protected routes
+  if (!isAdmin) {
+    return <Navigate to="/admin" />;
   }
 
   return <>{children}</>;
