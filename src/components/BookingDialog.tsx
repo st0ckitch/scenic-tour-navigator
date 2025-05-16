@@ -59,9 +59,46 @@ const BookingDialog = ({ isOpen, onClose, tourName, tourDate, guestCount, totalP
         bookingTime: new Date().toISOString()
       };
       
-      // For now we'll simulate the booking process
-      // In a real scenario, this would send data to a backend API
+      // Send email using EmailJS or a similar service
+      // This is a simple implementation using Email.js service
+      // You would need to replace the service ID, template ID and public key with your own
+      const emailData = {
+        service_id: 'YOUR_SERVICE_ID', // Replace with your EmailJS service ID
+        template_id: 'YOUR_TEMPLATE_ID', // Replace with your EmailJS template ID
+        user_id: 'YOUR_PUBLIC_KEY', // Replace with your EmailJS public key
+        template_params: {
+          to_email: 'YOUR_EMAIL_ADDRESS', // Replace with your email
+          from_name: data.name,
+          from_email: data.email,
+          from_phone: data.phone,
+          tour_name: tourName,
+          tour_date: tourDate,
+          guest_count: guestCount,
+          total_price: totalPrice,
+          special_requests: data.specialRequests || 'None',
+          booking_time: new Date().toLocaleString()
+        }
+      };
+
+      // For now we'll log the data
       console.log("Booking Data:", bookingData);
+      console.log("Email Data:", emailData);
+      
+      // In a real implementation, you would send the email here
+      // Example code (commented):
+      /*
+      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+      */
       
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1500));
