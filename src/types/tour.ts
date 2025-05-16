@@ -22,6 +22,9 @@ export type TourImage = {
 
 export type Tour = {
   id: string;
+  name: string; // Default name
+  description: string; // Default description
+  location: string; // Default location
   category: string;
   originalPrice: number;
   discountPrice?: number;

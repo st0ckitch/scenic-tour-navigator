@@ -46,19 +46,75 @@ export function useTours() {
       }
       
       // 3. Organize translations by tour_id
-      const translationsByTourId: Record<string, TourTranslation[]> = {};
-      translationsData.forEach((translation) => {
-        if (!translationsByTourId[translation.tour_id]) {
-          translationsByTourId[translation.tour_id] = [];
-        }
-        translationsByTourId[translation.tour_id].push({
-          name: translation.name,
-          description: translation.description,
-          longDescription: translation.longDescription || translation.description,
-          location: translation.location,
-          language: translation.language as Language
+      const translationsByTourId: Record<string, Record<Language, TourTranslation>> = {};
+      
+      // Initialize with empty translations for each tour
+      if (toursData) {
+        toursData.forEach((tour) => {
+          translationsByTourId[tour.id] = {
+            en: {
+              name: "Sample Tour", 
+              description: "Sample description", 
+              longDescription: "Sample detailed description",
+              location: "Sample location",
+              language: "en"
+            },
+            ka: {
+              name: "Sample Tour", 
+              description: "Sample description", 
+              longDescription: "Sample detailed description",
+              location: "Sample location",
+              language: "ka"
+            },
+            ru: {
+              name: "Sample Tour", 
+              description: "Sample description", 
+              longDescription: "Sample detailed description",
+              location: "Sample location",
+              language: "ru"
+            }
+          };
         });
-      });
+      }
+      
+      // Add actual translations
+      if (translationsData) {
+        translationsData.forEach((translation) => {
+          if (!translationsByTourId[translation.tour_id]) {
+            translationsByTourId[translation.tour_id] = {
+              en: {
+                name: "Sample Tour", 
+                description: "Sample description", 
+                longDescription: "Sample detailed description",
+                location: "Sample location",
+                language: "en"
+              },
+              ka: {
+                name: "Sample Tour", 
+                description: "Sample description", 
+                longDescription: "Sample detailed description",
+                location: "Sample location",
+                language: "ka"
+              },
+              ru: {
+                name: "Sample Tour", 
+                description: "Sample description", 
+                longDescription: "Sample detailed description",
+                location: "Sample location",
+                language: "ru"
+              }
+            };
+          }
+          
+          translationsByTourId[translation.tour_id][translation.language as Language] = {
+            name: translation.name,
+            description: translation.description,
+            longDescription: translation.longDescription || translation.description,
+            location: translation.location,
+            language: translation.language as Language
+          };
+        });
+      }
       
       // Organize images by tour_id
       const imagesByTourId: Record<string, TourImage[]> = {};
@@ -77,38 +133,30 @@ export function useTours() {
       
       // 4. Combine tours, translations, and images
       const formattedTours = toursData.map((tour): Tour => {
-        // Default translations
-        const defaultTranslations: Record<Language, TourTranslation> = {
+        // Get translations for this tour
+        const tourTranslations = translationsByTourId[tour.id] || {
           en: {
-            name: "Untitled Tour", 
-            description: "No description", 
-            longDescription: "No detailed description available",
-            location: "Unknown location",
+            name: "Sample Tour", 
+            description: "Sample description", 
+            longDescription: "Sample detailed description",
+            location: "Sample location",
             language: "en"
           },
           ka: {
-            name: "Untitled Tour", 
-            description: "No description", 
-            longDescription: "No detailed description available",
-            location: "Unknown location",
+            name: "Sample Tour", 
+            description: "Sample description", 
+            longDescription: "Sample detailed description",
+            location: "Sample location",
             language: "ka"
           },
           ru: {
-            name: "Untitled Tour", 
-            description: "No description", 
-            longDescription: "No detailed description available",
-            location: "Unknown location",
+            name: "Sample Tour", 
+            description: "Sample description", 
+            longDescription: "Sample detailed description",
+            location: "Sample location",
             language: "ru"
           }
         };
-        
-        // If we have translations for this tour, use them
-        const tourTranslations = translationsByTourId[tour.id] || [];
-        if (tourTranslations.length > 0) {
-          tourTranslations.forEach((translation) => {
-            defaultTranslations[translation.language] = translation;
-          });
-        }
         
         // Get images for this tour
         const tourImages = imagesByTourId[tour.id] || [];
@@ -120,8 +168,12 @@ export function useTours() {
           mainImage = mainImageObj.url;
         }
         
+        // Create tour object with name and location fallbacks
         return {
           id: tour.id,
+          name: tourTranslations.en.name, // Default name for fallback
+          description: tourTranslations.en.description, // Default description for fallback
+          location: tourTranslations.en.location, // Default location for fallback
           category: tour.category,
           originalPrice: Number(tour.original_price),
           discountPrice: tour.discount_price ? Number(tour.discount_price) : undefined,
@@ -133,7 +185,7 @@ export function useTours() {
             start: new Date(tour.start_date),
             end: new Date(tour.end_date)
           },
-          translations: defaultTranslations
+          translations: tourTranslations
         };
       });
       
