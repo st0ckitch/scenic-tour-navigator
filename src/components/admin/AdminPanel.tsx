@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -78,10 +77,7 @@ const AdminPanel: React.FC = () => {
   const showForm = isAddingTour || editingTour !== null;
   
   // Submit handler - unified for add and edit
-  const handleSubmit = async (tourData: any, imageFile?: File) => {
-    // Convert single File to array for compatibility with our existing functions
-    const imageFiles = imageFile ? [imageFile] : undefined;
-    
+  const handleSubmit = async (tourData: any, imageFiles?: File[]) => {
     if (editingTour) {
       await handleUpdateTour(tourData, imageFiles);
     } else {
