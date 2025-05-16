@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -66,12 +65,13 @@ const BookingDialog = ({ isOpen, onClose, tourName, tourDate, guestCount, totalP
         Booking Time: ${new Date().toLocaleString()}
       `;
       
-      // Updated EmailJS parameters
+      // Updated EmailJS parameters with template ID
       const emailData = {
         service_id: 'service_yg4aaen', // Your provided service ID
+        template_id: 'template_22j5t2c', // Your provided template ID
         user_id: 't4RuxgnErfpFwntGa', // Your provided public key
         template_params: {
-          to_email: 'artyomananov@gmail.com', // Updated to your email address
+          to_email: 'artyomananov@gmail.com',
           from_name: data.name,
           message: messageBody,
           reply_to: data.email,
