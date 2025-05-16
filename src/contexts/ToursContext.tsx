@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useLanguage, Language } from '@/contexts/LanguageContext';
@@ -56,7 +57,7 @@ type SupabaseTourResponse = {
   metadata: TourMetadata | null;
 };
 
-// Define context type
+// Define context type - Fix the return type of addTour to be Promise<void> to match the expected type
 type ToursContextType = {
   tours: Tour[];
   loading: boolean;
@@ -170,8 +171,8 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return tour;
   });
 
-  // Add a new tour to Supabase
-  const addTour = async (tour: Omit<Tour, 'id'>, imageFile?: File) => {
+  // Add a new tour to Supabase - Fix the implementation to match the type Promise<void>
+  const addTour = async (tour: Omit<Tour, 'id'>, imageFile?: File): Promise<void> => {
     try {
       setLoading(true);
       console.log("Adding tour with data:", tour);
@@ -288,7 +289,8 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       console.log("Tour added successfully:", newTour);
       
-      return Promise.resolve(newTour);
+      // The function no longer returns a Promise<Tour>, just returns void
+      return Promise.resolve();
     } catch (error: any) {
       console.error('Failed to add tour:', error);
       toast({
