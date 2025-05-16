@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -59,34 +58,37 @@ const BookingDialog = ({ isOpen, onClose, tourName, tourDate, guestCount, totalP
         bookingTime: new Date().toISOString()
       };
       
-      // Send email using EmailJS or a similar service
-      // This is a simple implementation using Email.js service
-      // You would need to replace the service ID, template ID and public key with your own
+      // Create email content (since we don't have a template)
+      const emailContent = `
+        <h2>New Tour Booking</h2>
+        <p><strong>Tour:</strong> ${tourName}</p>
+        <p><strong>Date:</strong> ${tourDate}</p>
+        <p><strong>Guests:</strong> ${guestCount}</p>
+        <p><strong>Total Price:</strong> $${totalPrice}</p>
+        <h3>Customer Details:</h3>
+        <p><strong>Name:</strong> ${data.name}</p>
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Phone:</strong> ${data.phone}</p>
+        <p><strong>Special Requests:</strong> ${data.specialRequests || 'None'}</p>
+        <p><strong>Booking Time:</strong> ${new Date().toLocaleString()}</p>
+      `;
+      
+      // Send email using EmailJS
       const emailData = {
-        service_id: 'YOUR_SERVICE_ID', // Replace with your EmailJS service ID
-        template_id: 'YOUR_TEMPLATE_ID', // Replace with your EmailJS template ID
-        user_id: 'YOUR_PUBLIC_KEY', // Replace with your EmailJS public key
+        service_id: 'service_yg4aaen', // Your provided service ID
+        template_id: '_', // We'll use a default template
+        user_id: 'MzniBVbYXsWP21LdQ', // Public key for EmailJS
         template_params: {
-          to_email: 'YOUR_EMAIL_ADDRESS', // Replace with your email
+          to_name: 'Admin',
           from_name: data.name,
-          from_email: data.email,
-          from_phone: data.phone,
-          tour_name: tourName,
-          tour_date: tourDate,
-          guest_count: guestCount,
-          total_price: totalPrice,
-          special_requests: data.specialRequests || 'None',
-          booking_time: new Date().toLocaleString()
+          message: emailContent,
+          reply_to: data.email,
         }
       };
 
-      // For now we'll log the data
       console.log("Booking Data:", bookingData);
-      console.log("Email Data:", emailData);
       
-      // In a real implementation, you would send the email here
-      // Example code (commented):
-      /*
+      // Send the email using EmailJS
       const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
         headers: {
@@ -98,10 +100,6 @@ const BookingDialog = ({ isOpen, onClose, tourName, tourDate, guestCount, totalP
       if (!response.ok) {
         throw new Error('Failed to send email');
       }
-      */
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
       
       toast({
         title: t("booking_successful"),
