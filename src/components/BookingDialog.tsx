@@ -71,7 +71,7 @@ const BookingDialog = ({ isOpen, onClose, tourName, tourDate, guestCount, totalP
         service_id: 'service_yg4aaen', // Your provided service ID
         user_id: 't4RuxgnErfpFwntGa', // Your provided public key
         template_params: {
-          to_email: 'tours@yourdomain.com', // Replace with your admin email address
+          to_email: 'artyomananov@gmail.com', // Updated to your email address
           from_name: data.name,
           message: messageBody,
           reply_to: data.email,
