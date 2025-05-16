@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 import AdminTourPanel from '@/components/admin/AdminTourPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -18,7 +17,7 @@ const Admin = () => {
   }
   
   return (
-    <ProtectedRoute>
+    <ProtectedRoute adminOnly={true}>
       <AdminTourPanel />
     </ProtectedRoute>
   );

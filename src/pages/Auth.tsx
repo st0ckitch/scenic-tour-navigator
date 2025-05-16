@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,10 +15,15 @@ const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Extract redirect path from URL query params
+  const searchParams = new URLSearchParams(location.search);
+  const redirectTo = searchParams.get('redirect') || '/';
 
   // Redirect if already logged in
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +33,7 @@ const Auth: React.FC = () => {
     try {
       if (isLogin) {
         await signIn(email, password);
-        navigate('/');
+        navigate(redirectTo);
       } else {
         await signUp(email, password);
         // Stay on the page for confirmation message display
@@ -60,6 +65,11 @@ const Auth: React.FC = () => {
                 {isLogin ? 'Sign up' : 'Sign in'}
               </button>
             </p>
+            {redirectTo !== '/' && (
+              <p className="mt-2 text-sm text-blue-600">
+                You'll be redirected to {redirectTo} after login
+              </p>
+            )}
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div>

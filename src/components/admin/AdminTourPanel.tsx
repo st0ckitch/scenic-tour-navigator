@@ -21,8 +21,7 @@ const AdminTourPanel: React.FC = () => {
     setIsProcessing(true);
     try {
       console.log("Adding tour:", tour);
-      const result = await addTour(tour, imageFile);
-      console.log("Tour addition result:", result);
+      await addTour(tour, imageFile);
       setIsAddingTour(false);
       toast({
         title: "Tour Added",
