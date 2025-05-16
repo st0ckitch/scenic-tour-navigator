@@ -67,22 +67,9 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
         
         // Transform Supabase data to Tour type
-        const transformedTours: Tour[] = data.map(tour => ({
-          id: tour.id,
-          name: tour.name,
-          description: tour.description,
-          location: tour.location,
-          image: tour.image || '',
-          rating: Number(tour.rating),
-          originalPrice: Number(tour.original_price),
-          discountPrice: tour.discount_price ? Number(tour.discount_price) : undefined,
-          category: tour.category,
-          participants: tour.participants || undefined,
-          dates: {
-            start: new Date(tour.start_date),
-            end: new Date(tour.end_date)
-          },
-          translations: tour.translations || {
+        const transformedTours: Tour[] = data.map(tour => {
+          // Create default translations object
+          const defaultTranslations: Record<Language, TourTranslation> = {
             en: {
               name: tour.name,
               description: tour.description,
@@ -90,19 +77,37 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               language: 'en'
             },
             ka: {
-              name: tour.translations?.ka?.name || '',
-              description: tour.translations?.ka?.description || '',
-              location: tour.translations?.ka?.location || '',
+              name: tour.name,
+              description: tour.description,
+              location: tour.location,
               language: 'ka'
             },
             ru: {
-              name: tour.translations?.ru?.name || '',
-              description: tour.translations?.ru?.description || '',
-              location: tour.translations?.ru?.location || '',
+              name: tour.name,
+              description: tour.description,
+              location: tour.location,
               language: 'ru'
             }
-          }
-        }));
+          };
+          
+          return {
+            id: tour.id,
+            name: tour.name,
+            description: tour.description,
+            location: tour.location,
+            image: tour.image || '',
+            rating: Number(tour.rating),
+            originalPrice: Number(tour.original_price),
+            discountPrice: tour.discount_price ? Number(tour.discount_price) : undefined,
+            category: tour.category,
+            participants: tour.participants || undefined,
+            dates: {
+              start: new Date(tour.start_date),
+              end: new Date(tour.end_date)
+            },
+            translations: defaultTranslations
+          };
+        });
         
         setTours(transformedTours);
       } catch (error) {
@@ -158,7 +163,29 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         participants: tour.participants,
         start_date: tour.dates.start.toISOString(),
         end_date: tour.dates.end.toISOString(),
-        translations: tour.translations
+        // Store translations as a JSON field in metadata
+        metadata: {
+          translations: tour.translations || {
+            en: {
+              name: tour.name,
+              description: tour.description,
+              location: tour.location,
+              language: 'en'
+            },
+            ka: {
+              name: '',
+              description: '',
+              location: '',
+              language: 'ka'
+            },
+            ru: {
+              name: '',
+              description: '',
+              location: '',
+              language: 'ru'
+            }
+          }
+        }
       };
       
       // Insert into Supabase
@@ -187,7 +214,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           start: new Date(data[0].start_date),
           end: new Date(data[0].end_date)
         },
-        translations: data[0].translations || {
+        translations: data[0].metadata?.translations || {
           en: {
             name: data[0].name,
             description: data[0].description,
@@ -251,7 +278,29 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         participants: updatedTour.participants,
         start_date: updatedTour.dates.start.toISOString(),
         end_date: updatedTour.dates.end.toISOString(),
-        translations: updatedTour.translations
+        // Store translations as a JSON field in metadata
+        metadata: {
+          translations: updatedTour.translations || {
+            en: {
+              name: updatedTour.name,
+              description: updatedTour.description,
+              location: updatedTour.location,
+              language: 'en'
+            },
+            ka: {
+              name: '',
+              description: '',
+              location: '',
+              language: 'ka'
+            },
+            ru: {
+              name: '',
+              description: '',
+              location: '',
+              language: 'ru'
+            }
+          }
+        }
       };
       
       // Update in Supabase
