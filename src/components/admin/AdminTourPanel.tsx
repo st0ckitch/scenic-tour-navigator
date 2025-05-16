@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -6,18 +7,22 @@ import { Edit, Trash2, Plus, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import TourForm from './TourForm';
 import { useTours } from '@/contexts/ToursContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminTourPanel: React.FC = () => {
   const { tours, loading, addTour, updateTour, deleteTour } = useTours();
   const [isAddingTour, setIsAddingTour] = useState(false);
   const [editingTour, setEditingTour] = useState<typeof tours[0] | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleAddTour = async (tour: Omit<typeof tours[0], 'id'>, imageFile?: File) => {
     setIsProcessing(true);
     try {
-      await addTour(tour, imageFile);
+      console.log("Adding tour:", tour);
+      const result = await addTour(tour, imageFile);
+      console.log("Tour addition result:", result);
       setIsAddingTour(false);
       toast({
         title: "Tour Added",
@@ -25,6 +30,11 @@ const AdminTourPanel: React.FC = () => {
       });
     } catch (error) {
       console.error("Error adding tour:", error);
+      toast({
+        title: "Error Adding Tour",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -33,11 +43,19 @@ const AdminTourPanel: React.FC = () => {
   const handleUpdateTour = async (updatedTour: typeof tours[0], imageFile?: File) => {
     setIsProcessing(true);
     try {
+      console.log("Updating tour:", updatedTour);
       await updateTour(updatedTour, imageFile);
       setEditingTour(null);
       toast({
         title: "Tour Updated",
         description: `${updatedTour.name} has been updated successfully.`,
+      });
+    } catch (error) {
+      console.error("Error updating tour:", error);
+      toast({
+        title: "Error Updating Tour",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
@@ -56,18 +74,38 @@ const AdminTourPanel: React.FC = () => {
         description: `${tourToDelete.name} has been deleted.`,
         variant: "destructive",
       });
+    } catch (error) {
+      console.error("Error deleting tour:", error);
+      toast({
+        title: "Error Deleting Tour",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleLogout = () => {
-    navigate('/');
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast({
+        title: "Logout Error",
+        description: "There was an error during logout. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
+
+  // Show debugging info in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Tours context state:", { tours, loading });
+    }
+  }, [tours, loading]);
 
   return (
     <div className="min-h-screen bg-gray-100 pb-10">

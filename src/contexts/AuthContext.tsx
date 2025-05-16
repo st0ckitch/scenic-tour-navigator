@@ -24,13 +24,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false);
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Existing session check:", session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -59,13 +62,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      console.log("Signing in with:", email);
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      console.log("Sign in successful:", data.user?.email);
       toast({
         title: "Login successful",
         description: "You have been logged in successfully.",
       });
     } catch (error: any) {
+      console.error("Sign in error:", error);
       toast({
         title: "Login failed",
         description: error.message,
@@ -89,6 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         description: error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 

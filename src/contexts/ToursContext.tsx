@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useLanguage, Language } from '@/contexts/LanguageContext';
@@ -39,7 +38,7 @@ type TourMetadata = {
   translations?: Record<Language, TourTranslation>;
 }
 
-// Define Supabase tour response type
+// Define Supabase tour response type to explicitly include metadata
 type SupabaseTourResponse = {
   id: string;
   name: string;
@@ -80,6 +79,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const loadTours = async () => {
       try {
         setLoading(true);
+        console.log("Loading tours from Supabase...");
         
         const { data, error } = await supabase
           .from('tours')
@@ -89,8 +89,12 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           throw error;
         }
         
+        console.log("Tours data from Supabase:", data);
+        
         // Transform Supabase data to Tour type
         const transformedTours: Tour[] = data.map((tour: SupabaseTourResponse) => {
+          console.log("Processing tour:", tour.id, tour.name);
+          
           // Create default translations object
           const defaultTranslations: Record<Language, TourTranslation> = {
             en: {
@@ -115,6 +119,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           
           // Check if metadata exists and has translations
           const translations = tour.metadata?.translations || defaultTranslations;
+          console.log("Tour translations:", translations);
           
           return {
             id: tour.id,
@@ -135,12 +140,13 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           };
         });
         
+        console.log("Transformed tours:", transformedTours);
         setTours(transformedTours);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to load tours:', error);
         toast({
           title: "Error",
-          description: "Failed to load tours. Please try again later.",
+          description: "Failed to load tours: " + error.message,
           variant: "destructive",
         });
       } finally {
@@ -168,10 +174,12 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const addTour = async (tour: Omit<Tour, 'id'>, imageFile?: File) => {
     try {
       setLoading(true);
+      console.log("Adding tour with data:", tour);
       
       // In a real app, we would upload the image to a storage service
       let imageUrl = tour.image;
       if (imageFile) {
+        console.log("Processing image file:", imageFile.name);
         // This is just a placeholder URL for demo purposes
         imageUrl = URL.createObjectURL(imageFile);
       }
@@ -228,7 +236,9 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
       
       if (!data || data.length === 0) {
-        throw new Error('No data returned from Supabase after inserting tour');
+        const errorMsg = 'No data returned from Supabase after inserting tour';
+        console.error(errorMsg);
+        throw new Error(errorMsg);
       }
       
       console.log('Tour created successfully, Supabase response:', data);
@@ -276,17 +286,14 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       // Update local state
       setTours(prevTours => [...prevTours, newTour]);
       
-      toast({
-        title: "Success",
-        description: "Tour created successfully!",
-      });
+      console.log("Tour added successfully:", newTour);
       
-      return Promise.resolve();
-    } catch (error) {
+      return Promise.resolve(newTour);
+    } catch (error: any) {
       console.error('Failed to add tour:', error);
       toast({
         title: "Error",
-        description: "Failed to add tour. Please try again later.",
+        description: "Failed to add tour: " + error.message,
         variant: "destructive",
       });
       return Promise.reject(error);
