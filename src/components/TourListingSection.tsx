@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { Tour, TourTranslation } from '@/types/tour';
+import { Skeleton } from "@/components/ui/skeleton";
 
 type TourCardProps = {
   id: string;
@@ -22,14 +23,23 @@ type TourCardProps = {
 const TourCard: React.FC<TourCardProps> = ({ 
   id, name, description, location, image, rating, originalPrice, discountPrice, dateRange 
 }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   return (
     <Link to={`/tour/${id}`} className="tour-card block group hover:shadow-lg transition-shadow duration-300">
       <div className="relative overflow-hidden">
+        {!imageLoaded && !imageError && (
+          <Skeleton className="h-48 w-full" />
+        )}
         <img 
           src={image || 'https://via.placeholder.com/400x225?text=No+Image'}
           alt={name}
-          className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className={`h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500 ${!imageLoaded && !imageError ? 'invisible' : 'visible'}`}
+          onLoad={() => setImageLoaded(true)}
           onError={(e) => {
+            setImageError(true);
+            setImageLoaded(true);
             e.currentTarget.src = 'https://via.placeholder.com/400x225?text=No+Image';
           }}
         />

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { toast } from "@/components/ui/use-toast";
 import { TourImage } from '@/types/tour';
 import { format } from 'date-fns';
 import BookingDialog from '@/components/BookingDialog';
+import { Skeleton } from "@/components/ui/skeleton";
 
 const TourDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +23,9 @@ const TourDetail = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [guestCount, setGuestCount] = useState(3); // Default guest count
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
+  const [mainImageLoaded, setMainImageLoaded] = useState(false);
+  const [mainImageError, setMainImageError] = useState(false);
+  const [thumbnailsLoaded, setThumbnailsLoaded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -34,6 +39,10 @@ const TourDetail = () => {
         // Set initial selected image
         const mainImage = foundTour.images?.find((img: TourImage) => img.isMain)?.url;
         setSelectedImage(mainImage || foundTour.image);
+        // Reset loading states when tour changes
+        setMainImageLoaded(false);
+        setMainImageError(false);
+        setThumbnailsLoaded({});
       }
     }
   }, [id, tours, loading, language]);
@@ -53,6 +62,10 @@ const TourDetail = () => {
 
   const handleGuestChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setGuestCount(parseInt(e.target.value));
+  };
+
+  const handleThumbnailLoad = (imageId: string) => {
+    setThumbnailsLoaded(prev => ({ ...prev, [imageId]: true }));
   };
 
   // Calculate the tour dates string
@@ -105,10 +118,19 @@ const TourDetail = () => {
       <div className="pt-16">
         {/* Hero Image */}
         <div className="relative h-96">
+          {!mainImageLoaded && !mainImageError && (
+            <Skeleton className="absolute inset-0 w-full h-full" />
+          )}
           <img 
             src={selectedImage || tour.image || '/placeholder.svg'}
             alt={currentTranslation.name}
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover ${!mainImageLoaded && !mainImageError ? 'invisible' : 'visible'}`}
+            onLoad={() => setMainImageLoaded(true)}
+            onError={(e) => {
+              setMainImageError(true);
+              setMainImageLoaded(true);
+              e.currentTarget.src = '/placeholder.svg';
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-60"></div>
           <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
@@ -138,10 +160,19 @@ const TourDetail = () => {
                 
                 {/* Main gallery image */}
                 <div className="aspect-w-16 aspect-h-9 mb-4 overflow-hidden rounded-lg">
+                  {!mainImageLoaded && !mainImageError && (
+                    <Skeleton className="w-full h-[400px]" />
+                  )}
                   <img 
                     src={selectedImage || tour.image || '/placeholder.svg'}
                     alt={`Tour image`}
-                    className="w-full h-[400px] object-cover"
+                    className={`w-full h-[400px] object-cover ${!mainImageLoaded && !mainImageError ? 'invisible' : 'visible'}`}
+                    onLoad={() => setMainImageLoaded(true)}
+                    onError={(e) => {
+                      setMainImageError(true);
+                      setMainImageLoaded(true);
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
                   />
                 </div>
                 
@@ -152,24 +183,43 @@ const TourDetail = () => {
                       <div 
                         key={image.id} 
                         className={`aspect-square overflow-hidden rounded-lg cursor-pointer border-2 ${selectedImage === image.url ? 'border-travel-coral' : 'border-transparent'}`}
-                        onClick={() => setSelectedImage(image.url)}
+                        onClick={() => {
+                          setSelectedImage(image.url);
+                          setMainImageLoaded(false);
+                          setMainImageError(false);
+                        }}
                       >
+                        {!thumbnailsLoaded[image.id] && (
+                          <Skeleton className="w-full h-full" />
+                        )}
                         <img 
                           src={image.url}
                           alt={`Tour thumbnail`}
-                          className="w-full h-full object-cover hover:opacity-90 transition-opacity"
+                          className={`w-full h-full object-cover hover:opacity-90 transition-opacity ${!thumbnailsLoaded[image.id] ? 'invisible' : 'visible'}`}
+                          onLoad={() => handleThumbnailLoad(image.id)}
+                          onError={(e) => {
+                            handleThumbnailLoad(image.id);
+                            e.currentTarget.src = '/placeholder.svg';
+                          }}
                         />
                       </div>
                     ))
                   ) : tour.image ? (
                     // If there are no additional images but there is a main image
-                    <div 
-                      className="aspect-square overflow-hidden rounded-lg cursor-pointer border-2 border-travel-coral"
-                    >
+                    <div className="aspect-square overflow-hidden rounded-lg cursor-pointer border-2 border-travel-coral">
+                      {!mainImageLoaded && !mainImageError && (
+                        <Skeleton className="w-full h-full" />
+                      )}
                       <img 
                         src={tour.image}
                         alt={`Tour thumbnail`}
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full object-cover ${!mainImageLoaded && !mainImageError ? 'invisible' : 'visible'}`}
+                        onLoad={() => setMainImageLoaded(true)}
+                        onError={(e) => {
+                          setMainImageError(true);
+                          setMainImageLoaded(true);
+                          e.currentTarget.src = '/placeholder.svg';
+                        }}
                       />
                     </div>
                   ) : (

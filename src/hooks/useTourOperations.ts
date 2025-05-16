@@ -14,39 +14,50 @@ export type TourImage = {
 export function useTourOperations() {
   const [loading, setLoading] = useState(false);
 
-  // Helper function to upload images
+  // Helper function to upload images - modified to handle blob URLs better
   const uploadImages = async (tourId: string, imageFiles: File[]): Promise<TourImage[]> => {
     const uploadedImages: TourImage[] = [];
     
     // In a real app, this would upload to Supabase storage
-    // For this example, we're just creating image URLs
     for (let i = 0; i < imageFiles.length; i++) {
       const file = imageFiles[i];
-      // This is just a placeholder - in a real app, you would upload to Supabase storage
-      const imageUrl = URL.createObjectURL(file);
+      
+      // Create a more persistent image URL - in production this would be a storage URL
+      // For this demo, we'll create a data URL instead of a blob URL
+      const reader = new FileReader();
+      
+      // Convert to data URL for persistence
+      const imageUrl = await new Promise<string>((resolve) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
       
       const isMain = i === 0; // First image is the main image
       
-      const { data: imageData, error: imageError } = await supabase
-        .from('tour_images')
-        .insert({
-          tour_id: tourId,
+      try {
+        const { data: imageData, error: imageError } = await supabase
+          .from('tour_images')
+          .insert({
+            tour_id: tourId,
+            url: imageUrl,
+            is_main: isMain
+          })
+          .select()
+          .single();
+        
+        if (imageError) {
+          console.error(`Error uploading image ${i}:`, imageError);
+          continue;
+        }
+        
+        uploadedImages.push({
+          id: imageData.id,
           url: imageUrl,
-          is_main: isMain
-        })
-        .select()
-        .single();
-      
-      if (imageError) {
-        console.error(`Error uploading image ${i}:`, imageError);
-        continue;
+          isMain: isMain
+        });
+      } catch (error) {
+        console.error(`Error uploading image ${i}:`, error);
       }
-      
-      uploadedImages.push({
-        id: imageData.id,
-        url: imageUrl,
-        isMain: isMain
-      });
     }
     
     return uploadedImages;
@@ -61,10 +72,13 @@ export function useTourOperations() {
       // Handle image upload if provided
       let mainImage = newTour.image;
       
-      // In a real app, upload image to Supabase storage
+      // Convert first image to data URL instead of blob URL
       if (imageFiles && imageFiles.length > 0) {
-        // This is just a placeholder for demo
-        mainImage = URL.createObjectURL(imageFiles[0]);
+        const reader = new FileReader();
+        mainImage = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(imageFiles[0]);
+        });
       }
       
       // Insert tour into database
@@ -161,7 +175,7 @@ export function useTourOperations() {
     }
   };
 
-  // Update an existing tour
+  // Update an existing tour - similar changes applied
   const updateTour = async (tour: Tour, imageFiles?: File[]): Promise<boolean> => {
     try {
       setLoading(true);
@@ -170,8 +184,11 @@ export function useTourOperations() {
       // Handle image update if needed
       let mainImage = tour.image;
       if (imageFiles && imageFiles.length > 0) {
-        // This is just a placeholder for demo
-        mainImage = URL.createObjectURL(imageFiles[0]);
+        const reader = new FileReader();
+        mainImage = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(imageFiles[0]);
+        });
       }
       
       // Update tour in database
