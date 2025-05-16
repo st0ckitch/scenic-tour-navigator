@@ -65,20 +65,21 @@ const BookingDialog = ({ isOpen, onClose, tourName, tourDate, guestCount, totalP
         Booking Time: ${new Date().toLocaleString()}
       `;
       
-      // Updated EmailJS parameters with template ID
+      // Fixed EmailJS parameters structure based on their API requirements
       const emailData = {
-        service_id: 'service_yg4aaen', // Your provided service ID
-        template_id: 'template_22j5t2c', // Your provided template ID
-        user_id: 't4RuxgnErfpFwntGa', // Your provided public key
+        service_id: 'service_yg4aaen',
+        template_id: 'template_22j5t2c',
+        user_id: 't4RuxgnErfpFwntGa',
         template_params: {
-          to_email: 'artyomananov@gmail.com',
+          to_name: 'Artyom',
           from_name: data.name,
           message: messageBody,
           reply_to: data.email,
+          to_email: 'artyomananov063@gmail.com',
         },
       };
 
-      console.log("Booking Data:", messageBody);
+      console.log("Sending booking data:", emailData);
       
       // Using the standard EmailJS API endpoint
       const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
@@ -90,7 +91,9 @@ const BookingDialog = ({ isOpen, onClose, tourName, tourDate, guestCount, totalP
       });
       
       if (!response.ok) {
-        throw new Error('Failed to send email');
+        const errorText = await response.text();
+        console.error("Email sending failed:", errorText);
+        throw new Error(`Failed to send email: ${errorText}`);
       }
       
       toast({
