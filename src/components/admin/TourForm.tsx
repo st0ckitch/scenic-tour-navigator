@@ -353,6 +353,7 @@ const TourForm: React.FC<TourFormProps> = ({ tour, onSubmit }) => {
               description: form.getValues('description'),
               location: form.getValues('location'),
             }}
+            existingTranslations={tour?.translations}
             onSave={handleTranslationsSave}
           />
           

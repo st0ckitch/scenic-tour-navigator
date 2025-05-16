@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage, Language } from '@/contexts/LanguageContext';
+import { toast } from "@/components/ui/use-toast";
 
 type TourTranslation = {
   name: string;
@@ -20,13 +21,15 @@ type TourTranslationsProps = {
     description: string;
     location: string;
   };
+  existingTranslations?: Record<Language, TourTranslation>;
   onSave: (translations: Record<Language, TourTranslation>) => void;
 };
 
-const TourTranslations: React.FC<TourTranslationsProps> = ({ initialValues, onSave }) => {
+const TourTranslations: React.FC<TourTranslationsProps> = ({ initialValues, existingTranslations, onSave }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<Language>('en');
   
+  // Initialize with existing translations or empty values
   const [translations, setTranslations] = useState<Record<Language, TourTranslation>>({
     en: {
       name: initialValues?.name || '',
@@ -47,6 +50,17 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({ initialValues, onSa
       language: 'ru'
     }
   });
+  
+  // Update translations if existingTranslations prop changes
+  useEffect(() => {
+    if (existingTranslations) {
+      setTranslations({
+        en: existingTranslations.en || translations.en,
+        ka: existingTranslations.ka || translations.ka,
+        ru: existingTranslations.ru || translations.ru
+      });
+    }
+  }, [existingTranslations]);
 
   const handleChange = (lang: Language, field: keyof TourTranslation, value: string) => {
     setTranslations(prev => ({
@@ -60,6 +74,10 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({ initialValues, onSa
 
   const handleSave = () => {
     onSave(translations);
+    toast({
+      title: t('translations_saved'),
+      description: t('translations_saved_description'),
+    });
   };
 
   return (
