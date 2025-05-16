@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useLanguage, Language } from '@/contexts/LanguageContext';
@@ -57,7 +56,7 @@ type SupabaseTourResponse = {
   metadata: TourMetadata | null;
 };
 
-// Define context type - Fix the return type of addTour to be Promise<void> to match the expected type
+// Define context type - Fix the return type of addTour to be Promise<void>
 type ToursContextType = {
   tours: Tour[];
   loading: boolean;
@@ -171,7 +170,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return tour;
   });
 
-  // Add a new tour to Supabase - Fix the implementation to match the type Promise<void>
+  // Add a new tour to Supabase - Fix implementation to match the Promise<void> return type
   const addTour = async (tour: Omit<Tour, 'id'>, imageFile?: File): Promise<void> => {
     try {
       setLoading(true);
@@ -288,9 +287,6 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setTours(prevTours => [...prevTours, newTour]);
       
       console.log("Tour added successfully:", newTour);
-      
-      // The function no longer returns a Promise<Tour>, just returns void
-      return Promise.resolve();
     } catch (error: any) {
       console.error('Failed to add tour:', error);
       toast({
@@ -298,14 +294,14 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         description: "Failed to add tour: " + error.message,
         variant: "destructive",
       });
-      return Promise.reject(error);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
   
   // Update an existing tour in Supabase
-  const updateTour = async (updatedTour: Tour, imageFile?: File) => {
+  const updateTour = async (updatedTour: Tour, imageFile?: File): Promise<void> => {
     try {
       setLoading(true);
       
@@ -393,7 +389,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
   
   // Delete a tour from Supabase
-  const deleteTour = async (id: string) => {
+  const deleteTour = async (id: string): Promise<void> => {
     try {
       setLoading(true);
       
