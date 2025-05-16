@@ -12,6 +12,7 @@ import TourDetail from "./pages/TourDetail";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import Tours from "./pages/Tours";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 

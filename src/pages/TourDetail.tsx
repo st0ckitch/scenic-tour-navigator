@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Calendar, Loader2 } from "lucide-react";
 import { useTours } from '@/hooks/useTours';
-import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from "@/components/ui/use-toast";
 import { TourImage } from '@/types/tour';
@@ -16,7 +14,6 @@ import BookingDialog from '@/components/BookingDialog';
 const TourDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { tours, loading } = useTours();
-  const { user } = useAuth();
   const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [tour, setTour] = useState<any>(null);
@@ -42,19 +39,10 @@ const TourDetail = () => {
   }, [id, tours, loading, language]);
 
   const handleBookNow = () => {
-    if (!user) {
-      toast({
-        title: t("authentication_required"),
-        description: t("please_login_register"),
-        variant: "destructive"
-      });
-      navigate('/auth');
-      return;
-    }
-
+    // Since we removed user authentication, we'll allow anyone to book now
     setBookingInProgress(true);
     
-    // Open the booking dialog instead of simulating the process
+    // Open the booking dialog
     setIsBookingDialogOpen(true);
     setBookingInProgress(false);
   };
@@ -136,6 +124,7 @@ const TourDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Tour Details */}
             <div className="lg:col-span-2">
+              {/* ... keep existing code (about this tour section) */}
               <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                 <h2 className="text-2xl font-bold mb-4">{t("about_this_tour")}</h2>
                 <p className="text-gray-700 mb-4">
@@ -271,7 +260,7 @@ const TourDetail = () => {
                   </Button>
                   
                   <p className="text-center text-sm text-gray-500 mt-4">
-                    {user ? t("only_charged_checkout") : t("login_required")}
+                    {t("only_charged_checkout")}
                   </p>
                 </div>
               </div>
