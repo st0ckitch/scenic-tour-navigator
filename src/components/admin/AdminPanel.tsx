@@ -78,7 +78,10 @@ const AdminPanel: React.FC = () => {
   const showForm = isAddingTour || editingTour !== null;
   
   // Submit handler - unified for add and edit
-  const handleSubmit = async (tourData: any, imageFiles?: File[]) => {
+  const handleSubmit = async (tourData: any, imageFile?: File) => {
+    // Convert single File to array for compatibility with our existing functions
+    const imageFiles = imageFile ? [imageFile] : undefined;
+    
     if (editingTour) {
       await handleUpdateTour(tourData, imageFiles);
     } else {
