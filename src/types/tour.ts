@@ -22,9 +22,9 @@ export type TourImage = {
 
 export type Tour = {
   id: string;
-  name: string; // Default name
-  description: string; // Default description
-  location: string; // Default location
+  name?: string; // Made optional since we get it from translations
+  description?: string; // Made optional since we get it from translations
+  location?: string; // Made optional since we get it from translations
   category: string;
   originalPrice: number;
   discountPrice?: number;
