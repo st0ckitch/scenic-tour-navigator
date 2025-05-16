@@ -66,7 +66,7 @@ const BookingDialog = ({ isOpen, onClose, tourName, tourDate, guestCount, totalP
         Booking Time: ${new Date().toLocaleString()}
       `;
       
-      // Simplified EmailJS request - no template required
+      // Updated EmailJS parameters
       const emailData = {
         service_id: 'service_yg4aaen', // Your provided service ID
         user_id: 't4RuxgnErfpFwntGa', // Your provided public key
@@ -76,13 +76,12 @@ const BookingDialog = ({ isOpen, onClose, tourName, tourDate, guestCount, totalP
           message: messageBody,
           reply_to: data.email,
         },
-        accessToken: 'public_key'
       };
 
       console.log("Booking Data:", messageBody);
       
-      // Send without a template using the direct send endpoint
-      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send-form', {
+      // Using the standard EmailJS API endpoint
+      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
