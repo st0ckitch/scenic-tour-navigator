@@ -11,6 +11,7 @@ import { Tour, TourTranslation } from '@/types/tour';
 type TourCardProps = {
   id: string;
   name: string;
+  description: string;
   location: string;
   image: string;
   rating: number;
@@ -20,7 +21,7 @@ type TourCardProps = {
 };
 
 const TourCard: React.FC<TourCardProps> = ({ 
-  id, name, location, image, rating, originalPrice, discountPrice, dateRange 
+  id, name, description, location, image, rating, originalPrice, discountPrice, dateRange 
 }) => {
   return (
     <Link to={`/tour/${id}`} className="tour-card block group hover:shadow-lg transition-shadow duration-300">
@@ -41,10 +42,18 @@ const TourCard: React.FC<TourCardProps> = ({
             <p className="text-gray-600 text-sm">{location}</p>
           </div>
           <div className="text-right">
-            <div className="text-gray-400 line-through text-sm">${originalPrice}</div>
-            <div className="text-travel-coral font-bold">${discountPrice || originalPrice}</div>
+            {discountPrice ? (
+              <>
+                <div className="text-gray-400 line-through text-sm">${originalPrice}</div>
+                <div className="text-travel-coral font-bold">${discountPrice}</div>
+              </>
+            ) : (
+              <div className="text-travel-coral font-bold">${originalPrice}</div>
+            )}
           </div>
         </div>
+        
+        <p className="text-gray-600 text-sm mt-2 line-clamp-2">{description}</p>
         
         <div className="mt-3 flex items-center justify-between">
           <div className="text-sm text-gray-600 flex items-center">
@@ -108,6 +117,15 @@ const TourListingSection: React.FC = () => {
           throw translationsError;
         }
         
+        // 3. Fetch all images
+        const { data: imagesData, error: imagesError } = await supabase
+          .from('tour_images')
+          .select('*');
+        
+        if (imagesError) {
+          console.error("Error fetching images:", imagesError);
+        }
+        
         // 3. Organize translations by tour_id
         const translationsByTourId: Record<string, TourTranslation[]> = {};
         translationsData.forEach((translation) => {
@@ -116,31 +134,50 @@ const TourListingSection: React.FC = () => {
           }
           translationsByTourId[translation.tour_id].push({
             name: translation.name,
-            description: translation.description,
+            description: translation.description || translation.shortDescription,
+            longDescription: translation.longDescription || translation.description,
             location: translation.location,
             language: translation.language as Language
           });
         });
         
-        // 4. Combine tours and translations
+        // Organize images by tour_id
+        const imagesByTourId: Record<string, { id: string, url: string, isMain: boolean }[]> = {};
+        if (imagesData && imagesData.length > 0) {
+          imagesData.forEach((image) => {
+            if (!imagesByTourId[image.tour_id]) {
+              imagesByTourId[image.tour_id] = [];
+            }
+            imagesByTourId[image.tour_id].push({
+              id: image.id,
+              url: image.url,
+              isMain: image.is_main
+            });
+          });
+        }
+        
+        // 4. Combine tours, translations, and images
         const formattedTours = toursData.map((tour): Tour => {
           // Default translations
           const defaultTranslations: Record<Language, TourTranslation> = {
             en: {
               name: "Untitled Tour", 
               description: "No description", 
+              longDescription: "No detailed description available",
               location: "Unknown location",
               language: "en"
             },
             ka: {
               name: "Untitled Tour", 
               description: "No description", 
+              longDescription: "No detailed description available",
               location: "Unknown location",
               language: "ka"
             },
             ru: {
               name: "Untitled Tour", 
               description: "No description", 
+              longDescription: "No detailed description available",
               location: "Unknown location",
               language: "ru"
             }
@@ -154,6 +191,9 @@ const TourListingSection: React.FC = () => {
             });
           }
           
+          // Get images for this tour
+          const tourImages = imagesByTourId[tour.id] || [];
+          
           return {
             id: tour.id,
             category: tour.category,
@@ -161,7 +201,8 @@ const TourListingSection: React.FC = () => {
             discountPrice: tour.discount_price ? Number(tour.discount_price) : undefined,
             participants: tour.participants || undefined,
             rating: Number(tour.rating),
-            image: tour.image || undefined,
+            image: (tourImages.find(img => img.isMain)?.url || tour.image || undefined),
+            images: tourImages,
             dates: {
               start: new Date(tour.start_date),
               end: new Date(tour.end_date)
@@ -189,6 +230,7 @@ const TourListingSection: React.FC = () => {
       translations: tour.translations,
       name: translation.name,
       description: translation.description,
+      longDescription: translation.longDescription,
       location: translation.location
     };
   });
@@ -250,6 +292,7 @@ const TourListingSection: React.FC = () => {
                   key={tour.id} 
                   id={tour.id}
                   name={tour.translations[language]?.name || tour.translations.en.name}
+                  description={tour.translations[language]?.description || tour.translations.en.description}
                   location={tour.translations[language]?.location || tour.translations.en.location}
                   image={tour.image || 'https://via.placeholder.com/400x225?text=No+Image'}
                   rating={tour.rating}

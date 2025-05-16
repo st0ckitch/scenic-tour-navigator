@@ -4,11 +4,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Calendar, Loader2 } from "lucide-react";
-import { useTours } from '@/contexts/ToursContext';
+import { Calendar, Users, MapPin, Star, Loader2 } from "lucide-react";
+import { format } from 'date-fns';
+import { useTours } from '@/hooks/useTours';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from "@/components/ui/use-toast";
+import { Tour, TourImage } from '@/types/tour';
 
 const TourDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,27 +18,39 @@ const TourDetail = () => {
   const { user } = useAuth();
   const { language, t } = useLanguage();
   const navigate = useNavigate();
-  const [tour, setTour] = useState<any>(null);
+  
+  const [tour, setTour] = useState<Tour | null>(null);
   const [bookingInProgress, setBookingInProgress] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Find tour when tours are loaded
   useEffect(() => {
-    if (!loading && id) {
+    if (!loading && tours.length > 0 && id) {
       const foundTour = tours.find(t => t.id === id);
       if (foundTour) {
         setTour(foundTour);
+        // Set the first image as selected or use the main image
+        if (foundTour.images && foundTour.images.length > 0) {
+          const mainImage = foundTour.images.find(img => img.isPrimary);
+          setSelectedImage(mainImage ? mainImage.url : foundTour.images[0].url);
+        } else if (foundTour.image) {
+          setSelectedImage(foundTour.image);
+        }
       }
     }
-  }, [id, tours, loading, language]); // Added language dependency to update when language changes
+  }, [id, tours, loading]);
 
+  // Handle booking button click
   const handleBookNow = () => {
     if (!user) {
       toast({
-        title: t("authentication_required"),
-        description: t("please_login_register"),
+        title: "Authentication Required",
+        description: "Please log in or register to book this tour.",
         variant: "destructive"
       });
       navigate('/auth');
@@ -48,8 +62,8 @@ const TourDetail = () => {
     // Simulate booking process
     setTimeout(() => {
       toast({
-        title: t("booking_successful"),
-        description: t("booking_confirmed"),
+        title: "Booking Successful",
+        description: "Your tour has been booked successfully!",
       });
       setBookingInProgress(false);
     }, 1500);
@@ -72,31 +86,77 @@ const TourDetail = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex-grow flex flex-col items-center justify-center p-4">
-          <h1 className="text-3xl font-bold mb-4">{t("tour_not_found")}</h1>
-          <p className="mb-6">{t("tour_not_exists")}</p>
-          <Button onClick={() => navigate('/tours')}>{t("back_to_tours")}</Button>
+          <h1 className="text-3xl font-bold mb-4">Tour Not Found</h1>
+          <p className="mb-6">The tour you are looking for does not exist or has been removed.</p>
+          <Button onClick={() => navigate('/tours')}>Back to Tours</Button>
         </div>
         <Footer />
       </div>
     );
   }
 
+  // Get the translation for the current language or fall back to English
+  const currentTranslation = tour.translations[language] || tour.translations.en;
+
   return (
     <>
       <Navbar />
       <div className="pt-16">
         {/* Hero Image */}
-        <div className="relative h-96">
+        <div className="relative h-96 md:h-[500px] overflow-hidden">
           <img 
-            src={tour.image}
-            alt={tour.name}
+            src={selectedImage || tour.image || '/placeholder.svg'}
+            alt={currentTranslation.name}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-60"></div>
           <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
             <div className="container mx-auto">
-              <h1 className="text-4xl font-bold mb-2">{tour.name}</h1>
-              <p className="text-lg">{tour.location}</p>
+              <h1 className="text-4xl md:text-5xl font-bold mb-2">{currentTranslation.name}</h1>
+              <div className="flex items-center text-lg">
+                <MapPin className="mr-1 h-5 w-5" />
+                <span>{currentTranslation.location}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Tour Highlights Bar */}
+        <div className="bg-white border-b">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex flex-wrap items-center gap-6 text-sm md:text-base">
+              <div className="flex items-center">
+                <Calendar className="mr-2 h-4 w-4 text-travel-coral" />
+                <span>
+                  {format(tour.dates.start, "MMM d")} - {format(tour.dates.end, "MMM d, yyyy")}
+                </span>
+              </div>
+              
+              {tour.participants && (
+                <div className="flex items-center">
+                  <Users className="mr-2 h-4 w-4 text-travel-coral" />
+                  <span>Max {tour.participants} participants</span>
+                </div>
+              )}
+              
+              <div className="flex items-center">
+                <Star className="mr-2 h-4 w-4 text-travel-coral" />
+                <span>{tour.rating} rating</span>
+              </div>
+              
+              <div className="flex items-center ml-auto">
+                <span className="font-medium">
+                  {tour.discountPrice ? (
+                    <>
+                      <span className="text-travel-coral">${tour.discountPrice}</span>
+                      <span className="text-gray-400 line-through ml-2">${tour.originalPrice}</span>
+                    </>
+                  ) : (
+                    <span className="text-travel-coral">${tour.originalPrice}</span>
+                  )}
+                  <span className="text-gray-500 text-sm"> per person</span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -107,17 +167,15 @@ const TourDetail = () => {
             {/* Left Column - Tour Details */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 className="text-2xl font-bold mb-4">{t("about_this_tour")}</h2>
-                <p className="text-gray-700 mb-4">
-                  {tour.description || "Experience the beauty of this destination with our exclusive package. Located in a prime area, this tour offers stunning views, world-class amenities, and easy access to local attractions."}
-                </p>
-                
-                <p className="text-gray-700 mb-4">
-                  During your tour, enjoy complimentary activities, access to special locations, and guided experiences. Our staff will help arrange excursions to nearby points of interest, local cuisine tasting, and cultural activities.
-                </p>
+                <h2 className="text-2xl font-bold mb-4">About This Tour</h2>
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 mb-6 whitespace-pre-line">
+                    {currentTranslation.longDescription || currentTranslation.description}
+                  </p>
+                </div>
                 
                 <div className="mt-8">
-                  <h3 className="text-xl font-bold mb-3">{t("included_amenities")}</h3>
+                  <h3 className="text-xl font-bold mb-3">What's Included</h3>
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {["Transportation", "Guided Tours", "WiFi", "Entrance Fees", 
                       "Special Access", "Photography Tips", "Cultural Experiences", "Welcome Gift"].map((item, index) => (
@@ -130,17 +188,55 @@ const TourDetail = () => {
               </div>
               
               <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold mb-4">{t("gallery")}</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {[1, 2, 3, 4, 5, 6].map((image) => (
-                    <div key={image} className="aspect-square overflow-hidden rounded-lg">
+                <h2 className="text-2xl font-bold mb-4">Gallery</h2>
+                
+                {/* Main gallery image */}
+                {selectedImage && (
+                  <div className="aspect-w-16 aspect-h-9 mb-4 overflow-hidden rounded-lg">
+                    <img 
+                      src={selectedImage}
+                      alt={currentTranslation.name}
+                      className="w-full h-[400px] object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+                
+                {/* Image thumbnails */}
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-4">
+                  {/* Show tour images if available */}
+                  {tour.images && tour.images.length > 0 ? (
+                    tour.images.map((image) => (
+                      <div 
+                        key={image.id} 
+                        className={`aspect-square overflow-hidden rounded-lg cursor-pointer border-2 ${selectedImage === image.url ? 'border-travel-coral' : 'border-transparent'}`}
+                        onClick={() => setSelectedImage(image.url)}
+                      >
+                        <img 
+                          src={image.url}
+                          alt={`Tour thumbnail`}
+                          className="w-full h-full object-cover hover:opacity-90 transition-opacity"
+                        />
+                      </div>
+                    ))
+                  ) : tour.image ? (
+                    // Single image if no multiple images
+                    <div 
+                      className={`aspect-square overflow-hidden rounded-lg cursor-pointer border-2 border-travel-coral`}
+                    >
                       <img 
                         src={tour.image}
-                        alt={`Tour image ${image}`}
-                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                        alt={`Tour image`}
+                        className="w-full h-full object-cover"
                       />
                     </div>
-                  ))}
+                  ) : (
+                    // Placeholder if no images
+                    <div className="aspect-square overflow-hidden rounded-lg bg-gray-200">
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        No images
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -162,40 +258,41 @@ const TourDetail = () => {
                 
                 <div className="border-t border-gray-200 py-4">
                   <div className="mb-4">
-                    <label className="block text-gray-700 mb-2">{t("start_end_date")}</label>
+                    <label className="block text-gray-700 mb-2">Tour Dates</label>
                     <div className="flex items-center border rounded-md p-2">
                       <Calendar size={18} className="text-gray-400 mr-2" />
                       <span>
-                        {tour.dates ? (
-                          `${new Date(tour.dates.start).toLocaleDateString()} - ${new Date(tour.dates.end).toLocaleDateString()}`
-                        ) : "Select dates"}
+                        {format(tour.dates.start, "MMM d")} - {format(tour.dates.end, "MMM d, yyyy")}
                       </span>
                     </div>
                   </div>
                   
                   <div className="mb-4">
-                    <label className="block text-gray-700 mb-2">{t("guests")}</label>
+                    <label className="block text-gray-700 mb-2">Number of Guests</label>
                     <select className="w-full border rounded-md p-2">
                       <option>1 guest</option>
                       <option>2 guests</option>
                       <option selected>3 guests</option>
                       <option>4 guests</option>
+                      {tour.participants && [...Array(tour.participants - 4)].map((_, i) => (
+                        <option key={i + 5}>{i + 5} guests</option>
+                      ))}
                     </select>
                   </div>
                   
                   <div className="mb-6">
-                    <h3 className="font-bold mb-2">{t("price_details")}</h3>
+                    <h3 className="font-bold mb-2">Price Details</h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span>${tour.discountPrice || tour.originalPrice} {t("per_person")}</span>
+                        <span>${tour.discountPrice || tour.originalPrice} × 3 guests</span>
                         <span>${(tour.discountPrice || tour.originalPrice) * 3}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("service_fee")}</span>
+                        <span>Service fee</span>
                         <span>$50</span>
                       </div>
                       <div className="pt-2 border-t border-gray-200 flex justify-between font-bold">
-                        <span>{t("total")}</span>
+                        <span>Total</span>
                         <span>${(tour.discountPrice || tour.originalPrice) * 3 + 50}</span>
                       </div>
                     </div>
@@ -209,15 +306,15 @@ const TourDetail = () => {
                     {bookingInProgress ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t("processing")}
+                        Processing...
                       </>
                     ) : (
-                      t("book_now")
+                      "Book Now"
                     )}
                   </Button>
                   
                   <p className="text-center text-sm text-gray-500 mt-4">
-                    {user ? t("only_charged_checkout") : t("login_required")}
+                    {user ? "You won't be charged yet" : "Login required to book this tour"}
                   </p>
                 </div>
               </div>

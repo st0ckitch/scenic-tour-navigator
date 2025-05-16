@@ -13,6 +13,7 @@ type TranslationFormProps = {
   initialValues?: {
     name: string;
     description: string;
+    longDescription?: string;
     location: string;
   };
   existingTranslations?: Record<Language, TourTranslation>;
@@ -32,18 +33,21 @@ const TranslationForm: React.FC<TranslationFormProps> = ({
     en: existingTranslations?.en || {
       name: initialValues?.name || '',
       description: initialValues?.description || '',
+      longDescription: initialValues?.longDescription || '',
       location: initialValues?.location || '',
       language: 'en'
     },
     ka: existingTranslations?.ka || {
       name: '',
       description: '',
+      longDescription: '',
       location: '',
       language: 'ka'
     },
     ru: existingTranslations?.ru || {
       name: '',
       description: '',
+      longDescription: '',
       location: '',
       language: 'ru'
     }
@@ -90,6 +94,9 @@ const TranslationForm: React.FC<TranslationFormProps> = ({
       if (!validatedTranslations[lang].description) {
         validatedTranslations[lang].description = validatedTranslations.en.description;
       }
+      if (!validatedTranslations[lang].longDescription) {
+        validatedTranslations[lang].longDescription = validatedTranslations.en.longDescription || validatedTranslations.en.description;
+      }
       if (!validatedTranslations[lang].location) {
         validatedTranslations[lang].location = validatedTranslations.en.location;
       }
@@ -99,8 +106,8 @@ const TranslationForm: React.FC<TranslationFormProps> = ({
     onChange(validatedTranslations);
     
     toast({
-      title: t('translations_saved'),
-      description: t('translations_saved_description'),
+      title: "Translations Saved",
+      description: "All translations have been saved successfully.",
     });
   };
 
@@ -131,13 +138,25 @@ const TranslationForm: React.FC<TranslationFormProps> = ({
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('tour_description')}
+                  Short Description
                 </label>
                 <Textarea
                   value={translations[lang].description}
                   onChange={(e) => handleChange(lang, 'description', e.target.value)}
-                  placeholder={lang === 'en' ? 'Tour description' : lang === 'ka' ? 'ტურის აღწერა' : 'Описание тура'}
-                  rows={5}
+                  placeholder={lang === 'en' ? 'Brief description for listings' : lang === 'ka' ? 'მოკლე აღწერა' : 'Краткое описание'}
+                  rows={2}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Long Description
+                </label>
+                <Textarea
+                  value={translations[lang].longDescription || ''}
+                  onChange={(e) => handleChange(lang, 'longDescription', e.target.value)}
+                  placeholder={lang === 'en' ? 'Detailed description for tour page' : lang === 'ka' ? 'დეტალური აღწერა' : 'Подробное описание'}
+                  rows={6}
                 />
               </div>
               
@@ -163,7 +182,7 @@ const TranslationForm: React.FC<TranslationFormProps> = ({
         
         <div className="mt-6">
           <Button onClick={handleSave} className="bg-travel-coral text-white hover:bg-orange-600">
-            {t('save_translations')}
+            Save Translations
           </Button>
         </div>
       </CardContent>
