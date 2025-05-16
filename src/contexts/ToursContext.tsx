@@ -73,9 +73,9 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           description: tour.description,
           location: tour.location,
           image: tour.image || '',
-          rating: parseFloat(tour.rating),
-          originalPrice: parseFloat(tour.original_price),
-          discountPrice: tour.discount_price ? parseFloat(tour.discount_price) : undefined,
+          rating: Number(tour.rating),
+          originalPrice: Number(tour.original_price),
+          discountPrice: tour.discount_price ? Number(tour.discount_price) : undefined,
           category: tour.category,
           participants: tour.participants || undefined,
           dates: {
@@ -156,8 +156,8 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         discount_price: tour.discountPrice,
         category: tour.category,
         participants: tour.participants,
-        start_date: tour.dates.start,
-        end_date: tour.dates.end
+        start_date: tour.dates.start.toISOString(),
+        end_date: tour.dates.end.toISOString()
       };
       
       // Insert into Supabase
@@ -177,9 +177,9 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         description: data[0].description,
         location: data[0].location,
         image: data[0].image || '',
-        rating: parseFloat(data[0].rating),
-        originalPrice: parseFloat(data[0].original_price),
-        discountPrice: data[0].discount_price ? parseFloat(data[0].discount_price) : undefined,
+        rating: Number(data[0].rating),
+        originalPrice: Number(data[0].original_price),
+        discountPrice: data[0].discount_price ? Number(data[0].discount_price) : undefined,
         category: data[0].category,
         participants: data[0].participants || undefined,
         dates: {
@@ -248,8 +248,8 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         discount_price: updatedTour.discountPrice,
         category: updatedTour.category,
         participants: updatedTour.participants,
-        start_date: updatedTour.dates.start,
-        end_date: updatedTour.dates.end
+        start_date: updatedTour.dates.start.toISOString(),
+        end_date: updatedTour.dates.end.toISOString()
       };
       
       // Update in Supabase
