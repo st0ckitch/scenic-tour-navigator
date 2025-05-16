@@ -9,20 +9,28 @@ import Footer from '@/components/Footer';
 import { useTours } from '@/contexts/ToursContext';
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const ToursPage: React.FC = () => {
   const { tours, loading } = useTours();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const { language } = useLanguage();
   
-  // Extract unique categories
-  const categories = ['All', ...Array.from(new Set(tours.map(tour => tour.category)))];
+  // Extract unique categories - with null check
+  const categories = ['All', ...Array.from(new Set(tours.map(tour => tour.category || 'Uncategorized').filter(Boolean)))];
   
-  // Filter tours based on search and category
+  // Filter tours based on search and category - with null checks
   const filteredTours = tours.filter(tour => {
-    const matchesSearch = tour.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           tour.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || tour.category === selectedCategory;
+    // First check if required properties exist
+    const tourName = tour.translations?.[language]?.name || tour.name || '';
+    const tourLocation = tour.translations?.[language]?.location || tour.location || '';
+    const tourCategory = tour.category || 'Uncategorized';
+    
+    const matchesSearch = searchTerm === '' || 
+                          tourName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          tourLocation.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || tourCategory === selectedCategory;
     
     return matchesSearch && matchesCategory;
   });
@@ -80,56 +88,65 @@ const ToursPage: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTours.map((tour) => (
-                <Link to={`/tour/${tour.id}`} key={tour.id} className="group">
-                  <Card className="h-full overflow-hidden transition-shadow hover:shadow-lg">
-                    <div className="aspect-w-16 aspect-h-9 overflow-hidden">
-                      <img 
-                        src={tour.image} 
-                        alt={tour.name} 
-                        className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          e.currentTarget.src = 'https://via.placeholder.com/400x225?text=No+Image';
-                        }}
-                      />
-                    </div>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-bold text-lg">{tour.name}</h3>
-                          <p className="text-gray-600 text-sm">{tour.location}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-gray-400 line-through text-sm">${tour.originalPrice}</div>
-                          <div className="text-travel-coral font-bold">${tour.discountPrice || tour.originalPrice}</div>
-                        </div>
+              {filteredTours.map((tour) => {
+                // Get the tour translation for the current language or fallback to default
+                const translation = tour.translations?.[language] || {};
+                const tourName = translation.name || tour.name || 'Unnamed Tour';
+                const tourLocation = translation.location || tour.location || 'Unknown location';
+                
+                return (
+                  <Link to={`/tour/${tour.id}`} key={tour.id} className="group">
+                    <Card className="h-full overflow-hidden transition-shadow hover:shadow-lg">
+                      <div className="aspect-w-16 aspect-h-9 overflow-hidden">
+                        <img 
+                          src={tour.image} 
+                          alt={tourName} 
+                          className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://via.placeholder.com/400x225?text=No+Image';
+                          }}
+                        />
                       </div>
-                      
-                      <div className="mt-3 flex items-center justify-between">
-                        <div className="text-sm text-gray-600 flex items-center">
-                          <CalendarIcon size={14} className="mr-1" /> 
-                          {format(tour.dates.start, "MMM d")} - {format(tour.dates.end, "MMM d, yyyy")}
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-bold text-lg">{tourName}</h3>
+                            <p className="text-gray-600 text-sm">{tourLocation}</p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-gray-400 line-through text-sm">${tour.originalPrice}</div>
+                            <div className="text-travel-coral font-bold">${tour.discountPrice || tour.originalPrice}</div>
+                          </div>
                         </div>
-                        <div className="flex items-center">
-                          <span className="text-yellow-400 mr-1">★</span>
-                          <span className="font-medium">{tour.rating}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-3">
-                        <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-xs">
-                          {tour.category}
-                        </span>
-                        {tour.participants && (
-                          <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-xs ml-2">
-                            Max {tour.participants} guests
-                          </span>
+                        
+                        {tour.dates && (
+                          <div className="mt-3 flex items-center justify-between">
+                            <div className="text-sm text-gray-600 flex items-center">
+                              <CalendarIcon size={14} className="mr-1" /> 
+                              {format(new Date(tour.dates.start), "MMM d")} - {format(new Date(tour.dates.end), "MMM d, yyyy")}
+                            </div>
+                            <div className="flex items-center">
+                              <span className="text-yellow-400 mr-1">★</span>
+                              <span className="font-medium">{tour.rating}</span>
+                            </div>
+                          </div>
                         )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+                        
+                        <div className="mt-3">
+                          <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-xs">
+                            {tour.category || 'Uncategorized'}
+                          </span>
+                          {tour.participants && (
+                            <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-xs ml-2">
+                              Max {tour.participants} guests
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
