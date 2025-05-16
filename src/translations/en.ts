@@ -1,4 +1,3 @@
-
 // English translations
 const translations = {
   // Navbar
@@ -117,7 +116,19 @@ const translations = {
   "language_version": "Language Version",
   "default_language": "Default Language",
   "translations": "Translations",
-  "save_translations": "Save Translations"
+  "save_translations": "Save Translations",
+
+  // Booking Dialog
+  "complete_your_booking": "Complete Your Booking",
+  "booking_for": "Complete booking details for",
+  "full_name": "Full Name",
+  "enter_your_name": "Enter your full name",
+  "email": "Email",
+  "phone_number": "Phone Number",
+  "any_special_requests": "Any special requests or notes",
+  "confirm_booking": "Confirm Booking",
+  "booking_failed": "Booking Failed",
+  "please_try_again": "Please try again later",
 };
 
 export default translations;

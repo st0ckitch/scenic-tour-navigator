@@ -11,6 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from "@/components/ui/use-toast";
 import { TourImage } from '@/types/tour';
 import { format } from 'date-fns';
+import BookingDialog from '@/components/BookingDialog';
 
 const TourDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,8 @@ const TourDetail = () => {
   const [tour, setTour] = useState<any>(null);
   const [bookingInProgress, setBookingInProgress] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [guestCount, setGuestCount] = useState(3); // Default guest count
+  const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -51,14 +54,32 @@ const TourDetail = () => {
 
     setBookingInProgress(true);
     
-    // Simulate booking process
-    setTimeout(() => {
-      toast({
-        title: t("booking_successful"),
-        description: t("booking_confirmed"),
-      });
-      setBookingInProgress(false);
-    }, 1500);
+    // Open the booking dialog instead of simulating the process
+    setIsBookingDialogOpen(true);
+    setBookingInProgress(false);
+  };
+
+  const handleCloseBookingDialog = () => {
+    setIsBookingDialogOpen(false);
+  };
+
+  const handleGuestChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setGuestCount(parseInt(e.target.value));
+  };
+
+  // Calculate the tour dates string
+  const getTourDates = () => {
+    if (tour?.dates) {
+      return `${format(new Date(tour.dates.start), "MMM d")} - ${format(new Date(tour.dates.end), "MMM d, yyyy")}`;
+    }
+    return "Select dates";
+  };
+
+  // Calculate the total price
+  const calculateTotalPrice = () => {
+    const basePrice = (tour?.discountPrice || tour?.originalPrice) * guestCount;
+    const serviceFee = 50;
+    return basePrice + serviceFee;
   };
 
   if (loading) {
@@ -120,18 +141,6 @@ const TourDetail = () => {
                 <p className="text-gray-700 mb-4">
                   {currentTranslation.longDescription || currentTranslation.description}
                 </p>
-                
-                <div className="mt-8">
-                  <h3 className="text-xl font-bold mb-3">{t("included_amenities")}</h3>
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {["Transportation", "Guided Tours", "WiFi", "Entrance Fees", 
-                      "Special Access", "Photography Tips", "Cultural Experiences", "Welcome Gift"].map((item, index) => (
-                      <li key={index} className="flex items-center">
-                        <span className="text-travel-coral mr-2">✓</span> {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
               </div>
               
               {/* Tour Gallery */}
@@ -216,11 +225,15 @@ const TourDetail = () => {
                   
                   <div className="mb-4">
                     <label className="block text-gray-700 mb-2">{t("guests")}</label>
-                    <select className="w-full border rounded-md p-2">
-                      <option>1 guest</option>
-                      <option>2 guests</option>
-                      <option selected>3 guests</option>
-                      <option>4 guests</option>
+                    <select 
+                      className="w-full border rounded-md p-2"
+                      value={guestCount}
+                      onChange={handleGuestChange}
+                    >
+                      <option value={1}>1 guest</option>
+                      <option value={2}>2 guests</option>
+                      <option value={3}>3 guests</option>
+                      <option value={4}>4 guests</option>
                     </select>
                   </div>
                   
@@ -229,7 +242,7 @@ const TourDetail = () => {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>${tour.discountPrice || tour.originalPrice} {t("per_person")}</span>
-                        <span>${(tour.discountPrice || tour.originalPrice) * 3}</span>
+                        <span>${(tour.discountPrice || tour.originalPrice) * guestCount}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>{t("service_fee")}</span>
@@ -237,7 +250,7 @@ const TourDetail = () => {
                       </div>
                       <div className="pt-2 border-t border-gray-200 flex justify-between font-bold">
                         <span>{t("total")}</span>
-                        <span>${(tour.discountPrice || tour.originalPrice) * 3 + 50}</span>
+                        <span>${calculateTotalPrice()}</span>
                       </div>
                     </div>
                   </div>
@@ -266,6 +279,17 @@ const TourDetail = () => {
           </div>
         </div>
       </div>
+      
+      {/* Booking Dialog */}
+      <BookingDialog 
+        isOpen={isBookingDialogOpen}
+        onClose={handleCloseBookingDialog}
+        tourName={currentTranslation.name}
+        tourDate={getTourDates()}
+        guestCount={guestCount}
+        totalPrice={calculateTotalPrice()}
+      />
+      
       <Footer />
     </>
   );
