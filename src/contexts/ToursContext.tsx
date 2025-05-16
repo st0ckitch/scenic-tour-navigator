@@ -184,6 +184,28 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         imageUrl = URL.createObjectURL(imageFile);
       }
       
+      // Ensure translations are properly formatted
+      const translations = tour.translations || {
+        en: {
+          name: tour.name,
+          description: tour.description,
+          location: tour.location,
+          language: 'en'
+        },
+        ka: {
+          name: '',
+          description: '',
+          location: '',
+          language: 'ka'
+        },
+        ru: {
+          name: '',
+          description: '',
+          location: '',
+          language: 'ru'
+        }
+      };
+      
       // Format data for Supabase
       const supabaseTour = {
         name: tour.name,
@@ -199,26 +221,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         end_date: tour.dates.end.toISOString(),
         // Store translations as metadata in JSON format
         metadata: {
-          translations: tour.translations || {
-            en: {
-              name: tour.name,
-              description: tour.description,
-              location: tour.location,
-              language: 'en'
-            },
-            ka: {
-              name: '',
-              description: '',
-              location: '',
-              language: 'ka'
-            },
-            ru: {
-              name: '',
-              description: '',
-              location: '',
-              language: 'ru'
-            }
-          }
+          translations: translations
         }
       };
       
@@ -261,32 +264,17 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           start: new Date(createdTour.start_date),
           end: new Date(createdTour.end_date)
         },
-        translations: createdTour.metadata?.translations || {
-          en: {
-            name: createdTour.name,
-            description: createdTour.description,
-            location: createdTour.location,
-            language: 'en'
-          },
-          ka: {
-            name: '',
-            description: '',
-            location: '',
-            language: 'ka'
-          },
-          ru: {
-            name: '',
-            description: '',
-            location: '',
-            language: 'ru'
-          }
-        }
+        translations: createdTour.metadata?.translations || translations
       };
       
       // Update local state
       setTours(prevTours => [...prevTours, newTour]);
       
       console.log("Tour added successfully:", newTour);
+      toast({
+        title: "Success",
+        description: "Tour added successfully!",
+      });
     } catch (error: any) {
       console.error('Failed to add tour:', error);
       toast({

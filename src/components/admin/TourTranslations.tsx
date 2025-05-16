@@ -57,6 +57,7 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
   
   // Update translations if existingTranslations prop changes
   useEffect(() => {
+    console.log("Existing translations updated:", existingTranslations);
     if (existingTranslations) {
       setTranslations({
         en: existingTranslations.en ? { ...existingTranslations.en } : translations.en,
@@ -74,7 +75,7 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
         }
       }));
     }
-  }, [existingTranslations, initialValues]);
+  }, [existingTranslations]);
 
   // Update translations any time initialValues change
   useEffect(() => {
@@ -92,6 +93,8 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
   }, [initialValues?.name, initialValues?.description, initialValues?.location]);
 
   const handleChange = (lang: Language, field: keyof TourTranslation, value: string) => {
+    console.log(`Translation changed for ${lang}.${field}:`, value);
+    
     setTranslations(prev => ({
       ...prev,
       [lang]: {
@@ -100,30 +103,48 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
       }
     }));
     
-    // If changing English values, update the parent form as well
-    if (lang === 'en' && field === 'name') {
-      if (initialValues && typeof initialValues.name !== 'undefined') {
-        initialValues.name = value;
+    // Automatically save changes when modifying English values
+    if (lang === 'en') {
+      if (initialValues) {
+        if (field === 'name' && typeof initialValues.name !== 'undefined') {
+          initialValues.name = value;
+        }
+        if (field === 'description' && typeof initialValues.description !== 'undefined') {
+          initialValues.description = value;
+        }
+        if (field === 'location' && typeof initialValues.location !== 'undefined') {
+          initialValues.location = value;
+        }
       }
-    }
-    if (lang === 'en' && field === 'description') {
-      if (initialValues && typeof initialValues.description !== 'undefined') {
-        initialValues.description = value;
-      }
-    }
-    if (lang === 'en' && field === 'location') {
-      if (initialValues && typeof initialValues.location !== 'undefined') {
-        initialValues.location = value;
-      }
+      
+      // Save changes immediately to ensure English values are always up to date
+      onSave({
+        ...translations,
+        en: {
+          ...translations.en,
+          [field]: value
+        }
+      });
     }
   };
 
   const handleSave = () => {
     // Make sure all languages have at least the name field filled
     const validatedTranslations = { ...translations };
+    
+    // Ensure English values are valid
+    if (!validatedTranslations.en.name) {
+      toast({
+        title: "Validation Error",
+        description: "English tour name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Fall back to English for empty fields in other languages
     for (const lang of ['ka', 'ru'] as Language[]) {
       if (!validatedTranslations[lang].name) {
-        // Fall back to English for empty fields
         validatedTranslations[lang].name = validatedTranslations.en.name;
       }
       if (!validatedTranslations[lang].description) {
@@ -134,6 +155,7 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
       }
     }
     
+    console.log("Saving translations:", validatedTranslations);
     onSave(validatedTranslations);
     
     toast({

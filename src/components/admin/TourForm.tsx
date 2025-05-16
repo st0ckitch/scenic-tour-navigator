@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { z } from 'zod';
@@ -137,7 +136,11 @@ const TourForm: React.FC<TourFormProps> = ({ tour, onSubmit }) => {
       delete tourData.startDate;
       delete tourData.endDate;
       
+      console.log("Submitting tour with data:", tourData);
+      
       await onSubmit(tourData, imageFile || undefined);
+    } catch (error) {
+      console.error("Form submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -145,6 +148,7 @@ const TourForm: React.FC<TourFormProps> = ({ tour, onSubmit }) => {
 
   // Handle translations save
   const handleTranslationsSave = (translationsData: Record<Language, TourTranslation>) => {
+    console.log("Translations saved:", translationsData);
     setTranslations(translationsData);
     
     // Update main form with English values
