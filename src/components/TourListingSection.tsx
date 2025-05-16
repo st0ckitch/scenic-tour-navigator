@@ -86,7 +86,7 @@ const FilterButton: React.FC<{ name: string; active: boolean; onClick: () => voi
 };
 
 const TourListingSection: React.FC = () => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
@@ -258,8 +258,8 @@ const TourListingSection: React.FC = () => {
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-bold mb-3">Go somewhere</h2>
-        <p className="text-xl text-gray-600 mb-10">Let's go on an adventure</p>
+        <h2 className="text-3xl md:text-4xl font-bold mb-3">{t('go_somewhere')}</h2>
+        <p className="text-xl text-gray-600 mb-10">{t('lets_go_adventure')}</p>
         
         {/* Filters */}
         <div className="mb-8 flex flex-wrap gap-3">
@@ -274,10 +274,10 @@ const TourListingSection: React.FC = () => {
           
           <div className="ml-auto">
             <select className="bg-white border border-gray-300 rounded-md px-3 py-2 text-sm">
-              <option>Recently added</option>
-              <option>Price: Low to high</option>
-              <option>Price: High to low</option>
-              <option>Top rated</option>
+              <option>{t('recently_added')}</option>
+              <option>{t('price_low_high')}</option>
+              <option>{t('price_high_low')}</option>
+              <option>{t('top_rated')}</option>
             </select>
           </div>
         </div>
@@ -320,7 +320,7 @@ const TourListingSection: React.FC = () => {
         <div className="mt-12 text-center">
           <Link to="/tours">
             <Button className="bg-travel-coral text-white hover:bg-orange-600 px-8 py-2">
-              View All Tours
+              {t('view_all_tours')}
             </Button>
           </Link>
         </div>
