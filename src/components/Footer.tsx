@@ -1,6 +1,10 @@
+
 import React from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Footer: React.FC = () => {
+  const { t } = useLanguage();
+  
   return (
     <footer className="bg-gray-800 text-white">
       <div className="container mx-auto px-4 py-12">
@@ -9,7 +13,7 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-xl font-bold mb-4">Geosides</h3>
             <p className="text-gray-300 mb-4">
-              Discover the beauty of Georgia with carefully curated tours and authentic experiences.
+              {t('discover_georgia')}
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-300 hover:text-white">
@@ -32,18 +36,18 @@ const Footer: React.FC = () => {
           
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('quick_links')}</h3>
             <ul className="space-y-2">
-              <li><a href="/" className="text-gray-300 hover:text-white transition-colors">Home</a></li>
-              <li><a href="/tours" className="text-gray-300 hover:text-white transition-colors">Tours</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors">About Us</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Contact</a></li>
+              <li><a href="/" className="text-gray-300 hover:text-white transition-colors">{t('home')}</a></li>
+              <li><a href="/tours" className="text-gray-300 hover:text-white transition-colors">{t('tours')}</a></li>
+              <li><a href="#" className="text-gray-300 hover:text-white transition-colors">{t('about_us')}</a></li>
+              <li><a href="#" className="text-gray-300 hover:text-white transition-colors">{t('contact')}</a></li>
             </ul>
           </div>
           
           {/* Popular Destinations */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Popular Destinations</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('popular_destinations')}</h3>
             <ul className="space-y-2">
               <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Tbilisi</a></li>
               <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Batumi</a></li>
@@ -54,19 +58,19 @@ const Footer: React.FC = () => {
           
           {/* Newsletter */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
-            <p className="text-gray-300 mb-4">Subscribe to our newsletter for the latest updates and offers.</p>
+            <h3 className="text-lg font-semibold mb-4">{t('newsletter')}</h3>
+            <p className="text-gray-300 mb-4">{t('newsletter_subtitle')}</p>
             <form className="flex">
-              <input type="email" placeholder="Your email" className="px-4 py-2 w-full rounded-l-md focus:outline-none focus:ring-2 focus:ring-travel-coral text-gray-900" />
+              <input type="email" placeholder={t('your_email')} className="px-4 py-2 w-full rounded-l-md focus:outline-none focus:ring-2 focus:ring-travel-coral text-gray-900" />
               <button type="submit" className="bg-travel-coral hover:bg-orange-600 text-white px-4 py-2 rounded-r-md transition-colors">
-                Subscribe
+                {t('subscribe')}
               </button>
             </form>
           </div>
         </div>
         
         <div className="mt-12 pt-8 border-t border-gray-700 text-center text-gray-400">
-          <p>© {new Date().getFullYear()} Geosides. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Geosides. {t('all_rights_reserved')}</p>
         </div>
       </div>
     </footer>
