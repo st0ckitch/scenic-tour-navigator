@@ -58,16 +58,12 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
   // Update translations if existingTranslations prop changes
   useEffect(() => {
     if (existingTranslations) {
-      // Deep copy to ensure we don't mutate props
-      const updatedTranslations = {
+      setTranslations({
         en: existingTranslations.en ? { ...existingTranslations.en } : translations.en,
         ka: existingTranslations.ka ? { ...existingTranslations.ka } : translations.ka,
         ru: existingTranslations.ru ? { ...existingTranslations.ru } : translations.ru
-      };
-      
-      setTranslations(updatedTranslations);
+      });
     } else if (initialValues) {
-      // If no translations but we have initial values, update English
       setTranslations(prev => ({
         ...prev,
         en: {
@@ -80,6 +76,21 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
     }
   }, [existingTranslations, initialValues]);
 
+  // Update translations any time initialValues change
+  useEffect(() => {
+    if (initialValues) {
+      setTranslations(prev => ({
+        ...prev,
+        en: {
+          ...prev.en,
+          name: initialValues.name || prev.en.name,
+          description: initialValues.description || prev.en.description,
+          location: initialValues.location || prev.en.location,
+        }
+      }));
+    }
+  }, [initialValues?.name, initialValues?.description, initialValues?.location]);
+
   const handleChange = (lang: Language, field: keyof TourTranslation, value: string) => {
     setTranslations(prev => ({
       ...prev,
@@ -88,6 +99,23 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
         [field]: value
       }
     }));
+    
+    // If changing English values, update the parent form as well
+    if (lang === 'en' && field === 'name') {
+      if (initialValues && typeof initialValues.name !== 'undefined') {
+        initialValues.name = value;
+      }
+    }
+    if (lang === 'en' && field === 'description') {
+      if (initialValues && typeof initialValues.description !== 'undefined') {
+        initialValues.description = value;
+      }
+    }
+    if (lang === 'en' && field === 'location') {
+      if (initialValues && typeof initialValues.location !== 'undefined') {
+        initialValues.location = value;
+      }
+    }
   };
 
   const handleSave = () => {

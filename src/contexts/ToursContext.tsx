@@ -197,7 +197,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         participants: tour.participants,
         start_date: tour.dates.start.toISOString(),
         end_date: tour.dates.end.toISOString(),
-        // Store translations as a JSON field in metadata
+        // Store translations as metadata in JSON format
         metadata: {
           translations: tour.translations || {
             en: {
