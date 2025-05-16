@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -47,48 +48,41 @@ const BookingDialog = ({ isOpen, onClose, tourName, tourDate, guestCount, totalP
     setIsSubmitting(true);
     
     try {
-      // Prepare booking data
-      const bookingData = {
-        ...data,
-        tourName,
-        tourDate,
-        guestCount,
-        totalPrice,
-        bookingTime: new Date().toISOString()
-      };
-      
-      // Create email content (since we don't have a template)
-      const emailContent = `
-        <h2>New Tour Booking</h2>
-        <p><strong>Tour:</strong> ${tourName}</p>
-        <p><strong>Date:</strong> ${tourDate}</p>
-        <p><strong>Guests:</strong> ${guestCount}</p>
-        <p><strong>Total Price:</strong> $${totalPrice}</p>
-        <h3>Customer Details:</h3>
-        <p><strong>Name:</strong> ${data.name}</p>
-        <p><strong>Email:</strong> ${data.email}</p>
-        <p><strong>Phone:</strong> ${data.phone}</p>
-        <p><strong>Special Requests:</strong> ${data.specialRequests || 'None'}</p>
-        <p><strong>Booking Time:</strong> ${new Date().toLocaleString()}</p>
+      // Create a simple message body with booking details
+      const messageBody = `
+        New Tour Booking:
+        
+        Tour: ${tourName}
+        Date: ${tourDate}
+        Guests: ${guestCount}
+        Total Price: $${totalPrice}
+        
+        Customer Details:
+        Name: ${data.name}
+        Email: ${data.email}
+        Phone: ${data.phone}
+        Special Requests: ${data.specialRequests || 'None'}
+        
+        Booking Time: ${new Date().toLocaleString()}
       `;
       
-      // Send email using EmailJS
+      // Simplified EmailJS request - no template required
       const emailData = {
         service_id: 'service_yg4aaen', // Your provided service ID
-        template_id: 'template_j0emw1j', // Default template ID
         user_id: 't4RuxgnErfpFwntGa', // Your provided public key
         template_params: {
-          to_name: 'Admin',
+          to_email: 'tours@yourdomain.com', // Replace with your admin email address
           from_name: data.name,
-          message: emailContent,
+          message: messageBody,
           reply_to: data.email,
-        }
+        },
+        accessToken: 'public_key'
       };
 
-      console.log("Booking Data:", bookingData);
+      console.log("Booking Data:", messageBody);
       
-      // Send the email using EmailJS
-      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      // Send without a template using the direct send endpoint
+      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send-form', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
