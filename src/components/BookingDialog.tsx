@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -76,8 +75,8 @@ const BookingDialog = ({ isOpen, onClose, tourName, tourDate, guestCount, totalP
       // Send email using EmailJS
       const emailData = {
         service_id: 'service_yg4aaen', // Your provided service ID
-        template_id: '_', // We'll use a default template
-        user_id: 'MzniBVbYXsWP21LdQ', // Public key for EmailJS
+        template_id: 'template_j0emw1j', // Default template ID
+        user_id: 't4RuxgnErfpFwntGa', // Your provided public key
         template_params: {
           to_name: 'Admin',
           from_name: data.name,
