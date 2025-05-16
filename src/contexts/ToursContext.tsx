@@ -34,6 +34,11 @@ export type Tour = {
   translations?: Record<Language, TourTranslation>;
 };
 
+// Define metadata type for Supabase
+type TourMetadata = {
+  translations?: Record<Language, TourTranslation>;
+}
+
 // Define context type
 type ToursContextType = {
   tours: Tour[];
@@ -90,6 +95,10 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }
           };
           
+          // Check if metadata exists and has translations
+          const metadata = tour.metadata as TourMetadata | undefined;
+          const translations = metadata?.translations || defaultTranslations;
+          
           return {
             id: tour.id,
             name: tour.name,
@@ -105,7 +114,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               start: new Date(tour.start_date),
               end: new Date(tour.end_date)
             },
-            translations: defaultTranslations
+            translations
           };
         });
         
@@ -214,7 +223,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           start: new Date(data[0].start_date),
           end: new Date(data[0].end_date)
         },
-        translations: data[0].metadata?.translations || {
+        translations: (data[0].metadata as TourMetadata)?.translations || {
           en: {
             name: data[0].name,
             description: data[0].description,
