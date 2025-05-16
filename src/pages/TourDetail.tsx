@@ -7,12 +7,14 @@ import Footer from "@/components/Footer";
 import { Calendar, Loader2 } from "lucide-react";
 import { useTours } from '@/contexts/ToursContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from "@/components/ui/use-toast";
 
 const TourDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { tours, loading } = useTours();
   const { user } = useAuth();
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [tour, setTour] = useState<any>(null);
   const [bookingInProgress, setBookingInProgress] = useState(false);
@@ -28,13 +30,13 @@ const TourDetail = () => {
         setTour(foundTour);
       }
     }
-  }, [id, tours, loading]);
+  }, [id, tours, loading, language]); // Added language dependency to update when language changes
 
   const handleBookNow = () => {
     if (!user) {
       toast({
-        title: "Authentication required",
-        description: "Please login or register to book this tour",
+        title: t("authentication_required"),
+        description: t("please_login_register"),
         variant: "destructive"
       });
       navigate('/auth');
@@ -46,8 +48,8 @@ const TourDetail = () => {
     // Simulate booking process
     setTimeout(() => {
       toast({
-        title: "Booking successful",
-        description: "Your booking has been confirmed!",
+        title: t("booking_successful"),
+        description: t("booking_confirmed"),
       });
       setBookingInProgress(false);
     }, 1500);
@@ -70,9 +72,9 @@ const TourDetail = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex-grow flex flex-col items-center justify-center p-4">
-          <h1 className="text-3xl font-bold mb-4">Tour not found</h1>
-          <p className="mb-6">The tour you're looking for doesn't exist or has been removed.</p>
-          <Button onClick={() => navigate('/tours')}>Back to Tours</Button>
+          <h1 className="text-3xl font-bold mb-4">{t("tour_not_found")}</h1>
+          <p className="mb-6">{t("tour_not_exists")}</p>
+          <Button onClick={() => navigate('/tours')}>{t("back_to_tours")}</Button>
         </div>
         <Footer />
       </div>
@@ -105,7 +107,7 @@ const TourDetail = () => {
             {/* Left Column - Tour Details */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 className="text-2xl font-bold mb-4">About This Tour</h2>
+                <h2 className="text-2xl font-bold mb-4">{t("about_this_tour")}</h2>
                 <p className="text-gray-700 mb-4">
                   {tour.description || "Experience the beauty of this destination with our exclusive package. Located in a prime area, this tour offers stunning views, world-class amenities, and easy access to local attractions."}
                 </p>
@@ -115,7 +117,7 @@ const TourDetail = () => {
                 </p>
                 
                 <div className="mt-8">
-                  <h3 className="text-xl font-bold mb-3">Included Amenities</h3>
+                  <h3 className="text-xl font-bold mb-3">{t("included_amenities")}</h3>
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {["Transportation", "Guided Tours", "WiFi", "Entrance Fees", 
                       "Special Access", "Photography Tips", "Cultural Experiences", "Welcome Gift"].map((item, index) => (
@@ -128,7 +130,7 @@ const TourDetail = () => {
               </div>
               
               <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold mb-4">Gallery</h2>
+                <h2 className="text-2xl font-bold mb-4">{t("gallery")}</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {[1, 2, 3, 4, 5, 6].map((image) => (
                     <div key={image} className="aspect-square overflow-hidden rounded-lg">
@@ -160,7 +162,7 @@ const TourDetail = () => {
                 
                 <div className="border-t border-gray-200 py-4">
                   <div className="mb-4">
-                    <label className="block text-gray-700 mb-2">Start / End Date</label>
+                    <label className="block text-gray-700 mb-2">{t("start_end_date")}</label>
                     <div className="flex items-center border rounded-md p-2">
                       <Calendar size={18} className="text-gray-400 mr-2" />
                       <span>
@@ -172,7 +174,7 @@ const TourDetail = () => {
                   </div>
                   
                   <div className="mb-4">
-                    <label className="block text-gray-700 mb-2">Guests</label>
+                    <label className="block text-gray-700 mb-2">{t("guests")}</label>
                     <select className="w-full border rounded-md p-2">
                       <option>1 guest</option>
                       <option>2 guests</option>
@@ -182,18 +184,18 @@ const TourDetail = () => {
                   </div>
                   
                   <div className="mb-6">
-                    <h3 className="font-bold mb-2">Price Details</h3>
+                    <h3 className="font-bold mb-2">{t("price_details")}</h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span>${tour.discountPrice || tour.originalPrice} per person</span>
+                        <span>${tour.discountPrice || tour.originalPrice} {t("per_person")}</span>
                         <span>${(tour.discountPrice || tour.originalPrice) * 3}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Service fee</span>
+                        <span>{t("service_fee")}</span>
                         <span>$50</span>
                       </div>
                       <div className="pt-2 border-t border-gray-200 flex justify-between font-bold">
-                        <span>Total</span>
+                        <span>{t("total")}</span>
                         <span>${(tour.discountPrice || tour.originalPrice) * 3 + 50}</span>
                       </div>
                     </div>
@@ -207,15 +209,15 @@ const TourDetail = () => {
                     {bookingInProgress ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
+                        {t("processing")}
                       </>
                     ) : (
-                      'Book Now'
+                      t("book_now")
                     )}
                   </Button>
                   
                   <p className="text-center text-sm text-gray-500 mt-4">
-                    {user ? "You'll only be charged at checkout" : "Login required for booking"}
+                    {user ? t("only_charged_checkout") : t("login_required")}
                   </p>
                 </div>
               </div>

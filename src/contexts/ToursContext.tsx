@@ -82,7 +82,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             start: new Date(tour.start_date),
             end: new Date(tour.end_date)
           },
-          translations: {
+          translations: tour.translations || {
             en: {
               name: tour.name,
               description: tour.description,
@@ -90,15 +90,15 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               language: 'en'
             },
             ka: {
-              name: '', // We'll need to add these translations later
-              description: '',
-              location: '',
+              name: tour.translations?.ka?.name || '',
+              description: tour.translations?.ka?.description || '',
+              location: tour.translations?.ka?.location || '',
               language: 'ka'
             },
             ru: {
-              name: '', // We'll need to add these translations later
-              description: '',
-              location: '',
+              name: tour.translations?.ru?.name || '',
+              description: tour.translations?.ru?.description || '',
+              location: tour.translations?.ru?.location || '',
               language: 'ru'
             }
           }
@@ -157,7 +157,8 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         category: tour.category,
         participants: tour.participants,
         start_date: tour.dates.start.toISOString(),
-        end_date: tour.dates.end.toISOString()
+        end_date: tour.dates.end.toISOString(),
+        translations: tour.translations
       };
       
       // Insert into Supabase
@@ -186,7 +187,7 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           start: new Date(data[0].start_date),
           end: new Date(data[0].end_date)
         },
-        translations: {
+        translations: data[0].translations || {
           en: {
             name: data[0].name,
             description: data[0].description,
@@ -249,7 +250,8 @@ export const ToursProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         category: updatedTour.category,
         participants: updatedTour.participants,
         start_date: updatedTour.dates.start.toISOString(),
-        end_date: updatedTour.dates.end.toISOString()
+        end_date: updatedTour.dates.end.toISOString(),
+        translations: updatedTour.translations
       };
       
       // Update in Supabase

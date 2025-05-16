@@ -25,7 +25,11 @@ type TourTranslationsProps = {
   onSave: (translations: Record<Language, TourTranslation>) => void;
 };
 
-const TourTranslations: React.FC<TourTranslationsProps> = ({ initialValues, existingTranslations, onSave }) => {
+const TourTranslations: React.FC<TourTranslationsProps> = ({ 
+  initialValues, 
+  existingTranslations, 
+  onSave 
+}) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<Language>('en');
   
@@ -54,13 +58,27 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({ initialValues, exis
   // Update translations if existingTranslations prop changes
   useEffect(() => {
     if (existingTranslations) {
-      setTranslations({
-        en: existingTranslations.en || translations.en,
-        ka: existingTranslations.ka || translations.ka,
-        ru: existingTranslations.ru || translations.ru
-      });
+      // Deep copy to ensure we don't mutate props
+      const updatedTranslations = {
+        en: existingTranslations.en ? { ...existingTranslations.en } : translations.en,
+        ka: existingTranslations.ka ? { ...existingTranslations.ka } : translations.ka,
+        ru: existingTranslations.ru ? { ...existingTranslations.ru } : translations.ru
+      };
+      
+      setTranslations(updatedTranslations);
+    } else if (initialValues) {
+      // If no translations but we have initial values, update English
+      setTranslations(prev => ({
+        ...prev,
+        en: {
+          ...prev.en,
+          name: initialValues.name || prev.en.name,
+          description: initialValues.description || prev.en.description,
+          location: initialValues.location || prev.en.location,
+        }
+      }));
     }
-  }, [existingTranslations]);
+  }, [existingTranslations, initialValues]);
 
   const handleChange = (lang: Language, field: keyof TourTranslation, value: string) => {
     setTranslations(prev => ({
@@ -73,7 +91,23 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({ initialValues, exis
   };
 
   const handleSave = () => {
-    onSave(translations);
+    // Make sure all languages have at least the name field filled
+    const validatedTranslations = { ...translations };
+    for (const lang of ['ka', 'ru'] as Language[]) {
+      if (!validatedTranslations[lang].name) {
+        // Fall back to English for empty fields
+        validatedTranslations[lang].name = validatedTranslations.en.name;
+      }
+      if (!validatedTranslations[lang].description) {
+        validatedTranslations[lang].description = validatedTranslations.en.description;
+      }
+      if (!validatedTranslations[lang].location) {
+        validatedTranslations[lang].location = validatedTranslations.en.location;
+      }
+    }
+    
+    onSave(validatedTranslations);
+    
     toast({
       title: t('translations_saved'),
       description: t('translations_saved_description'),
