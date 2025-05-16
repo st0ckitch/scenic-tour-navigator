@@ -1,138 +1,78 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLanguage, Language } from '@/contexts/LanguageContext';
+import { Button } from "@/components/ui/button";
+import { Language, useLanguage } from '@/contexts/LanguageContext';
+import { TourTranslation } from '@/types/tour';
 import { toast } from "@/components/ui/use-toast";
 
-type TourTranslation = {
-  name: string;
-  description: string;
-  location: string;
-  language: Language;
-};
-
-type TourTranslationsProps = {
+type TranslationFormProps = {
   initialValues?: {
     name: string;
     description: string;
     location: string;
   };
   existingTranslations?: Record<Language, TourTranslation>;
-  onSave: (translations: Record<Language, TourTranslation>) => void;
+  onChange: (translations: Record<Language, TourTranslation>) => void;
 };
 
-const TourTranslations: React.FC<TourTranslationsProps> = ({ 
-  initialValues, 
-  existingTranslations, 
-  onSave 
+const TranslationForm: React.FC<TranslationFormProps> = ({
+  initialValues,
+  existingTranslations,
+  onChange
 }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<Language>('en');
   
-  // Initialize with existing translations or empty values
+  // Initialize translations with existing values or empty values
   const [translations, setTranslations] = useState<Record<Language, TourTranslation>>({
-    en: {
+    en: existingTranslations?.en || {
       name: initialValues?.name || '',
       description: initialValues?.description || '',
       location: initialValues?.location || '',
       language: 'en'
     },
-    ka: {
+    ka: existingTranslations?.ka || {
       name: '',
       description: '',
       location: '',
       language: 'ka'
     },
-    ru: {
+    ru: existingTranslations?.ru || {
       name: '',
       description: '',
       location: '',
       language: 'ru'
     }
   });
-  
-  // Update translations if existingTranslations prop changes
-  useEffect(() => {
-    console.log("Existing translations updated:", existingTranslations);
-    if (existingTranslations) {
-      setTranslations({
-        en: existingTranslations.en ? { ...existingTranslations.en } : translations.en,
-        ka: existingTranslations.ka ? { ...existingTranslations.ka } : translations.ka,
-        ru: existingTranslations.ru ? { ...existingTranslations.ru } : translations.ru
-      });
-    } else if (initialValues) {
-      setTranslations(prev => ({
-        ...prev,
-        en: {
-          ...prev.en,
-          name: initialValues.name || prev.en.name,
-          description: initialValues.description || prev.en.description,
-          location: initialValues.location || prev.en.location,
-        }
-      }));
-    }
-  }, [existingTranslations]);
 
-  // Update translations any time initialValues change
-  useEffect(() => {
-    if (initialValues) {
-      setTranslations(prev => ({
-        ...prev,
-        en: {
-          ...prev.en,
-          name: initialValues.name || prev.en.name,
-          description: initialValues.description || prev.en.description,
-          location: initialValues.location || prev.en.location,
-        }
-      }));
-    }
-  }, [initialValues?.name, initialValues?.description, initialValues?.location]);
-
+  // Handle translation change
   const handleChange = (lang: Language, field: keyof TourTranslation, value: string) => {
-    console.log(`Translation changed for ${lang}.${field}:`, value);
-    
-    setTranslations(prev => ({
-      ...prev,
+    const updatedTranslations = {
+      ...translations,
       [lang]: {
-        ...prev[lang],
+        ...translations[lang],
         [field]: value
       }
-    }));
+    };
     
-    // Automatically save changes when modifying English values
+    setTranslations(updatedTranslations);
+    
+    // For English values, update immediately
     if (lang === 'en') {
-      if (initialValues) {
-        if (field === 'name' && typeof initialValues.name !== 'undefined') {
-          initialValues.name = value;
-        }
-        if (field === 'description' && typeof initialValues.description !== 'undefined') {
-          initialValues.description = value;
-        }
-        if (field === 'location' && typeof initialValues.location !== 'undefined') {
-          initialValues.location = value;
-        }
-      }
-      
-      // Save changes immediately to ensure English values are always up to date
-      onSave({
-        ...translations,
-        en: {
-          ...translations.en,
-          [field]: value
-        }
-      });
+      onChange(updatedTranslations);
     }
   };
 
+  // Handle save button click
   const handleSave = () => {
-    // Make sure all languages have at least the name field filled
+    // Copy English values to empty fields in other languages
     const validatedTranslations = { ...translations };
     
-    // Ensure English values are valid
+    // Ensure English name is not empty
     if (!validatedTranslations.en.name) {
       toast({
         title: "Validation Error",
@@ -142,7 +82,7 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
       return;
     }
     
-    // Fall back to English for empty fields in other languages
+    // Fill empty fields with English values
     for (const lang of ['ka', 'ru'] as Language[]) {
       if (!validatedTranslations[lang].name) {
         validatedTranslations[lang].name = validatedTranslations.en.name;
@@ -155,8 +95,8 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
       }
     }
     
-    console.log("Saving translations:", validatedTranslations);
-    onSave(validatedTranslations);
+    // Update parent component
+    onChange(validatedTranslations);
     
     toast({
       title: t('translations_saved'),
@@ -165,11 +105,11 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
   };
 
   return (
-    <Card className="mb-6">
+    <Card>
       <CardContent className="pt-6">
         <h3 className="text-lg font-semibold mb-4">{t('translations')}</h3>
         
-        <Tabs defaultValue="en" value={activeTab} onValueChange={(value) => setActiveTab(value as Language)}>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Language)}>
           <TabsList className="mb-4">
             <TabsTrigger value="en">English</TabsTrigger>
             <TabsTrigger value="ka">ქართული</TabsTrigger>
@@ -186,7 +126,6 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
                   value={translations[lang].name}
                   onChange={(e) => handleChange(lang, 'name', e.target.value)}
                   placeholder={lang === 'en' ? 'Tour name' : lang === 'ka' ? 'ტურის სახელი' : 'Название тура'}
-                  className="w-full"
                 />
               </div>
               
@@ -198,7 +137,6 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
                   value={translations[lang].description}
                   onChange={(e) => handleChange(lang, 'description', e.target.value)}
                   placeholder={lang === 'en' ? 'Tour description' : lang === 'ka' ? 'ტურის აღწერა' : 'Описание тура'}
-                  className="w-full"
                   rows={5}
                 />
               </div>
@@ -211,7 +149,6 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
                   value={translations[lang].location}
                   onChange={(e) => handleChange(lang, 'location', e.target.value)}
                   placeholder={lang === 'en' ? 'Location' : lang === 'ka' ? 'მდებარეობა' : 'Местоположение'}
-                  className="w-full"
                 />
               </div>
               
@@ -234,4 +171,4 @@ const TourTranslations: React.FC<TourTranslationsProps> = ({
   );
 };
 
-export default TourTranslations;
+export default TranslationForm;

@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import AdminTourPanel from '@/components/admin/AdminTourPanel';
+import AdminPanel from '@/components/admin/AdminPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Loader2 } from 'lucide-react';
@@ -27,7 +27,7 @@ const Admin = () => {
   
   return (
     <ProtectedRoute adminOnly={true}>
-      <AdminTourPanel />
+      <AdminPanel />
     </ProtectedRoute>
   );
 };

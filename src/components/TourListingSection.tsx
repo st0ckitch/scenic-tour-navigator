@@ -1,10 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTours } from '@/contexts/ToursContext';
 import { Link } from 'react-router-dom';
+import { supabase } from "@/integrations/supabase/client";
+import { useLanguage, Language } from '@/contexts/LanguageContext';
+import { Tour, TourTranslation } from '@/types/tour';
 
 type TourCardProps = {
   id: string;
@@ -24,7 +26,7 @@ const TourCard: React.FC<TourCardProps> = ({
     <Link to={`/tour/${id}`} className="tour-card block group hover:shadow-lg transition-shadow duration-300">
       <div className="relative overflow-hidden">
         <img 
-          src={image}
+          src={image || 'https://via.placeholder.com/400x225?text=No+Image'}
           alt={name}
           className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500"
           onError={(e) => {
@@ -76,8 +78,120 @@ const FilterButton: React.FC<{ name: string; active: boolean; onClick: () => voi
 };
 
 const TourListingSection: React.FC = () => {
-  const { tours } = useTours();
+  const { language } = useLanguage();
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
+  
+  // Fetch tours from Supabase
+  useEffect(() => {
+    const fetchTours = async () => {
+      try {
+        setLoading(true);
+        
+        // 1. Fetch all tours
+        const { data: toursData, error: toursError } = await supabase
+          .from('tours')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (toursError) {
+          throw toursError;
+        }
+        
+        // 2. Fetch all translations
+        const { data: translationsData, error: translationsError } = await supabase
+          .from('tour_translations')
+          .select('*');
+        
+        if (translationsError) {
+          throw translationsError;
+        }
+        
+        // 3. Organize translations by tour_id
+        const translationsByTourId: Record<string, TourTranslation[]> = {};
+        translationsData.forEach((translation) => {
+          if (!translationsByTourId[translation.tour_id]) {
+            translationsByTourId[translation.tour_id] = [];
+          }
+          translationsByTourId[translation.tour_id].push({
+            name: translation.name,
+            description: translation.description,
+            location: translation.location,
+            language: translation.language as Language
+          });
+        });
+        
+        // 4. Combine tours and translations
+        const formattedTours = toursData.map((tour): Tour => {
+          // Default translations
+          const defaultTranslations: Record<Language, TourTranslation> = {
+            en: {
+              name: "Untitled Tour", 
+              description: "No description", 
+              location: "Unknown location",
+              language: "en"
+            },
+            ka: {
+              name: "Untitled Tour", 
+              description: "No description", 
+              location: "Unknown location",
+              language: "ka"
+            },
+            ru: {
+              name: "Untitled Tour", 
+              description: "No description", 
+              location: "Unknown location",
+              language: "ru"
+            }
+          };
+          
+          // If we have translations for this tour, use them
+          const tourTranslations = translationsByTourId[tour.id] || [];
+          if (tourTranslations.length > 0) {
+            tourTranslations.forEach((translation) => {
+              defaultTranslations[translation.language] = translation;
+            });
+          }
+          
+          return {
+            id: tour.id,
+            category: tour.category,
+            originalPrice: Number(tour.original_price),
+            discountPrice: tour.discount_price ? Number(tour.discount_price) : undefined,
+            participants: tour.participants || undefined,
+            rating: Number(tour.rating),
+            image: tour.image || undefined,
+            dates: {
+              start: new Date(tour.start_date),
+              end: new Date(tour.end_date)
+            },
+            translations: defaultTranslations
+          };
+        });
+        
+        setTours(formattedTours);
+      } catch (error) {
+        console.error("Error fetching tours:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTours();
+  }, []);
+  
+  // Apply localization to tours based on current language
+  const localizedTours = tours.map(tour => {
+    const translation = tour.translations[language] || tour.translations.en;
+    return {
+      ...tour,
+      translations: tour.translations,
+      name: translation.name,
+      description: translation.description,
+      location: translation.location
+    };
+  });
   
   // Get unique categories from the tours
   const availableFilters = Array.from(new Set(tours.map(tour => tour.category)));
@@ -86,8 +200,8 @@ const TourListingSection: React.FC = () => {
   
   // Filter tours based on active filter
   const filteredTours = activeFilter === 'All' 
-    ? tours 
-    : tours.filter(tour => tour.category === activeFilter);
+    ? localizedTours 
+    : localizedTours.filter(tour => tour.category === activeFilter);
   
   // Limit to 6 tours for display
   const displayedTours = filteredTours.slice(0, 6);
@@ -119,28 +233,38 @@ const TourListingSection: React.FC = () => {
           </div>
         </div>
         
+        {/* Loading state */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-travel-sky" />
+            <span className="ml-2">Loading tours...</span>
+          </div>
+        )}
+        
         {/* Tour Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {displayedTours.length > 0 ? (
-            displayedTours.map((tour) => (
-              <TourCard 
-                key={tour.id} 
-                id={tour.id}
-                name={tour.name} 
-                location={tour.location}
-                image={tour.image}
-                rating={tour.rating}
-                originalPrice={tour.originalPrice}
-                discountPrice={tour.discountPrice}
-                dateRange={`${format(tour.dates.start, "MMM d")} - ${format(tour.dates.end, "MMM d, yyyy")}`}
-              />
-            ))
-          ) : (
-            <div className="col-span-4 text-center py-8">
-              <p className="text-gray-500">No tours available. Please check back later.</p>
-            </div>
-          )}
-        </div>
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayedTours.length > 0 ? (
+              displayedTours.map((tour) => (
+                <TourCard 
+                  key={tour.id} 
+                  id={tour.id}
+                  name={tour.translations[language]?.name || tour.translations.en.name}
+                  location={tour.translations[language]?.location || tour.translations.en.location}
+                  image={tour.image || 'https://via.placeholder.com/400x225?text=No+Image'}
+                  rating={tour.rating}
+                  originalPrice={tour.originalPrice}
+                  discountPrice={tour.discountPrice}
+                  dateRange={`${format(tour.dates.start, "MMM d")} - ${format(tour.dates.end, "MMM d, yyyy")}`}
+                />
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-8">
+                <p className="text-gray-500">No tours available. Please check back later.</p>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* View All Button */}
         <div className="mt-12 text-center">

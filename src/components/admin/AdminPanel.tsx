@@ -1,90 +1,65 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Edit, Trash2, Plus, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import TourForm from './TourForm';
-import { useTours } from '@/contexts/ToursContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTours } from '@/hooks/useTours';
+import { useTourOperations } from '@/hooks/useTourOperations';
+import TourForm from './TourForm';
+import { Tour } from '@/types/tour';
 
-const AdminTourPanel: React.FC = () => {
-  const { tours, loading, addTour, updateTour, deleteTour } = useTours();
+const AdminPanel: React.FC = () => {
+  const { tours, loading: loadingTours, refetch } = useTours();
+  const { createTour, updateTour, deleteTour, loading: operationLoading } = useTourOperations();
   const [isAddingTour, setIsAddingTour] = useState(false);
-  const [editingTour, setEditingTour] = useState<typeof tours[0] | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [editingTour, setEditingTour] = useState<Tour | null>(null);
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleAddTour = async (tour: Omit<typeof tours[0], 'id'>, imageFile?: File) => {
-    setIsProcessing(true);
+  // Handle adding a tour
+  const handleAddTour = async (tourData: any, imageFile?: File) => {
     try {
-      console.log("Adding tour:", tour);
-      await addTour(tour, imageFile);
-      setIsAddingTour(false);
-      toast({
-        title: "Tour Added",
-        description: `${tour.name} has been added successfully.`,
-      });
+      const result = await createTour(tourData, imageFile);
+      if (result) {
+        setIsAddingTour(false);
+        refetch();
+      }
     } catch (error) {
       console.error("Error adding tour:", error);
-      toast({
-        title: "Error Adding Tour",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
-  const handleUpdateTour = async (updatedTour: typeof tours[0], imageFile?: File) => {
-    setIsProcessing(true);
+  // Handle updating a tour
+  const handleUpdateTour = async (tourData: any, imageFile?: File) => {
     try {
-      console.log("Updating tour:", updatedTour);
-      await updateTour(updatedTour, imageFile);
-      setEditingTour(null);
-      toast({
-        title: "Tour Updated",
-        description: `${updatedTour.name} has been updated successfully.`,
-      });
+      const success = await updateTour(tourData, imageFile);
+      if (success) {
+        setEditingTour(null);
+        refetch();
+      }
     } catch (error) {
       console.error("Error updating tour:", error);
-      toast({
-        title: "Error Updating Tour",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
+  // Handle deleting a tour
   const handleDeleteTour = async (id: string) => {
     const tourToDelete = tours.find(tour => tour.id === id);
     if (!tourToDelete) return;
     
-    setIsProcessing(true);
-    try {
-      await deleteTour(id);
-      toast({
-        title: "Tour Deleted",
-        description: `${tourToDelete.name} has been deleted.`,
-        variant: "destructive",
-      });
-    } catch (error) {
-      console.error("Error deleting tour:", error);
-      toast({
-        title: "Error Deleting Tour",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
+    const confirmed = window.confirm(`Are you sure you want to delete "${tourToDelete.translations.en.name}"?`);
+    if (!confirmed) return;
+    
+    const success = await deleteTour(id, tourToDelete.translations.en.name);
+    if (success) {
+      refetch();
     }
   };
 
+  // Handle logout
   const handleLogout = async () => {
     try {
       await signOut();
@@ -99,58 +74,65 @@ const AdminTourPanel: React.FC = () => {
     }
   };
 
-  // Show debugging info in development
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log("Tours context state:", { tours, loading });
+  // Show form or tour list
+  const showForm = isAddingTour || editingTour !== null;
+  
+  // Submit handler - unified for add and edit
+  const handleSubmit = async (tourData: any, imageFile?: File) => {
+    if (editingTour) {
+      await handleUpdateTour(tourData, imageFile);
+    } else {
+      await handleAddTour(tourData, imageFile);
     }
-  }, [tours, loading]);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-10">
+    <div className="min-h-screen bg-gray-50 pb-10">
+      {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl md:text-2xl font-bold">Admin Tour Management</h1>
+          <h1 className="text-xl md:text-2xl font-bold">Tour Management</h1>
           <Button onClick={handleLogout} variant="outline">
             Logout
           </Button>
         </div>
       </div>
 
+      {/* Content */}
       <div className="container mx-auto px-4 py-8">
-        {(isAddingTour || editingTour) ? (
+        {showForm ? (
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">
                 {editingTour ? 'Edit Tour' : 'Add New Tour'}
               </h2>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setIsAddingTour(false);
-                  setEditingTour(null);
-                }}
-                disabled={isProcessing}
-              >
-                Cancel
-              </Button>
             </div>
-            <TourForm 
-              tour={editingTour} 
-              onSubmit={editingTour ? handleUpdateTour : handleAddTour} 
+            
+            <TourForm
+              tour={editingTour || undefined}
+              isSubmitting={operationLoading}
+              onSubmit={handleSubmit}
+              onCancel={() => {
+                setIsAddingTour(false);
+                setEditingTour(null);
+              }}
             />
           </div>
         ) : (
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Tour Listings</h2>
-              <Button onClick={() => setIsAddingTour(true)} disabled={isProcessing}>
+              <Button 
+                onClick={() => setIsAddingTour(true)} 
+                disabled={operationLoading}
+                className="bg-travel-coral hover:bg-orange-600 text-white"
+              >
                 <Plus size={16} className="mr-2" /> Add New Tour
               </Button>
             </div>
 
             {/* Loading state */}
-            {loading && (
+            {loadingTours && (
               <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-travel-sky" />
                 <span className="ml-2">Loading tours...</span>
@@ -158,7 +140,7 @@ const AdminTourPanel: React.FC = () => {
             )}
 
             {/* Tour listing table */}
-            {!loading && (
+            {!loadingTours && (
               <div className="bg-white rounded-lg shadow overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
@@ -189,15 +171,17 @@ const AdminTourPanel: React.FC = () => {
                               <div className="h-10 w-10 flex-shrink-0">
                                 <img
                                   className="h-10 w-10 rounded-md object-cover"
-                                  src={tour.image}
-                                  alt={tour.name}
+                                  src={tour.image || 'https://via.placeholder.com/40?text=No+Image'}
+                                  alt={tour.translations.en.name}
                                   onError={(e) => {
                                     e.currentTarget.src = 'https://via.placeholder.com/40?text=No+Image';
                                   }}
                                 />
                               </div>
                               <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{tour.name}</div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {tour.translations.en.name}
+                                </div>
                                 <div className="text-sm text-gray-500">
                                   {format(tour.dates.start, "MMM d")} - {format(tour.dates.end, "MMM d, yyyy")}
                                 </div>
@@ -205,7 +189,7 @@ const AdminTourPanel: React.FC = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {tour.location}
+                            {tour.translations.en.location}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {tour.category}
@@ -228,7 +212,7 @@ const AdminTourPanel: React.FC = () => {
                                 variant="ghost" 
                                 size="sm" 
                                 onClick={() => setEditingTour(tour)}
-                                disabled={isProcessing}
+                                disabled={operationLoading}
                               >
                                 <Edit size={16} />
                               </Button>
@@ -236,9 +220,10 @@ const AdminTourPanel: React.FC = () => {
                                 variant="ghost" 
                                 size="sm"
                                 onClick={() => handleDeleteTour(tour.id)}
-                                disabled={isProcessing}
+                                disabled={operationLoading}
+                                className="text-red-500 hover:bg-red-50"
                               >
-                                <Trash2 size={16} className="text-red-500" />
+                                <Trash2 size={16} />
                               </Button>
                             </div>
                           </td>
@@ -248,7 +233,7 @@ const AdminTourPanel: React.FC = () => {
                   </table>
                 </div>
                 
-                {tours.length === 0 && !loading && (
+                {tours.length === 0 && !loadingTours && (
                   <div className="text-center py-10">
                     <p className="text-gray-500">No tours found. Add your first tour!</p>
                   </div>
@@ -262,4 +247,4 @@ const AdminTourPanel: React.FC = () => {
   );
 };
 
-export default AdminTourPanel;
+export default AdminPanel;

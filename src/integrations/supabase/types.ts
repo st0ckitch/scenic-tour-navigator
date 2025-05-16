@@ -9,17 +9,52 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      tour_translations: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          language: string
+          location: string
+          name: string
+          tour_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          language: string
+          location: string
+          name: string
+          tour_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          language?: string
+          location?: string
+          name?: string
+          tour_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tour_translations_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "tours"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tours: {
         Row: {
           category: string
           created_at: string
-          description: string
           discount_price: number | null
           end_date: string
           id: string
           image: string | null
-          location: string
-          name: string
           original_price: number
           participants: number | null
           rating: number
@@ -28,13 +63,10 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string
-          description: string
           discount_price?: number | null
           end_date: string
           id?: string
           image?: string | null
-          location: string
-          name: string
           original_price: number
           participants?: number | null
           rating?: number
@@ -43,13 +75,10 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
-          description?: string
           discount_price?: number | null
           end_date?: string
           id?: string
           image?: string | null
-          location?: string
-          name?: string
           original_price?: number
           participants?: number | null
           rating?: number
