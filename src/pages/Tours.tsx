@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { TourTranslation } from '@/types/tour';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ToursPage: React.FC = () => {
   const { tours, loading } = useTours();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const { language } = useLanguage();
+  const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
   
   // Extract unique categories - with null check
   const categories = ['All', ...Array.from(new Set(tours.map(tour => tour.category || 'Uncategorized').filter(Boolean)))];
@@ -35,6 +37,30 @@ const ToursPage: React.FC = () => {
     
     return matchesSearch && matchesCategory;
   });
+
+  // Set image loading state handler
+  const handleImageLoad = (tourId: string) => {
+    setImageLoadingStates(prev => ({ ...prev, [tourId]: true }));
+  };
+
+  const handleImageError = (event: React.SyntheticEvent<HTMLImageElement>, tourId: string) => {
+    // Set the image as loaded (even though it errored) to remove the skeleton
+    setImageLoadingStates(prev => ({ ...prev, [tourId]: true }));
+    // Set a placeholder image
+    event.currentTarget.src = '/placeholder.svg';
+  };
+
+  // Reset image loading states when tours change
+  useEffect(() => {
+    // Initialize all tour images as not loaded
+    if (tours.length > 0) {
+      const initialLoadingStates: Record<string, boolean> = {};
+      tours.forEach(tour => {
+        initialLoadingStates[tour.id] = false;
+      });
+      setImageLoadingStates(initialLoadingStates);
+    }
+  }, [tours]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -95,18 +121,21 @@ const ToursPage: React.FC = () => {
                 const translation = (tour.translations?.[language] || {}) as TourTranslation;
                 const tourName = translation.name || tour.name || 'Unnamed Tour';
                 const tourLocation = translation.location || tour.location || 'Unknown location';
+                const isImageLoaded = imageLoadingStates[tour.id] === true;
                 
                 return (
                   <Link to={`/tour/${tour.id}`} key={tour.id} className="group">
                     <Card className="h-full overflow-hidden transition-shadow hover:shadow-lg">
-                      <div className="aspect-w-16 aspect-h-9 overflow-hidden">
+                      <div className="aspect-w-16 aspect-h-9 overflow-hidden relative">
+                        {!isImageLoaded && (
+                          <Skeleton className="absolute inset-0 w-full h-48" />
+                        )}
                         <img 
-                          src={tour.image} 
+                          src={tour.image || '/placeholder.svg'} 
                           alt={tourName} 
-                          className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            e.currentTarget.src = 'https://via.placeholder.com/400x225?text=No+Image';
-                          }}
+                          className={`h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300 ${!isImageLoaded ? 'invisible' : 'visible'}`}
+                          onLoad={() => handleImageLoad(tour.id)}
+                          onError={(e) => handleImageError(e, tour.id)}
                         />
                       </div>
                       <CardContent className="p-4">
